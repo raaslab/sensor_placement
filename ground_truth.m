@@ -1,0 +1,14 @@
+mu = [0 0];
+Sigma = 10 * [3 0; 0 3];
+x1 = -3:.07:3; x2 = -3:.07:3;
+[X1,X2] = meshgrid(x1,x2);
+% F = 2555 * mvnpdf([X1(:) X2(:)],mu,Sigma);
+% F = reshape(F,length(x2),length(x1));
+%image(X1.^2 + X2.^2);
+%colorbar;
+%axis equal;
+% hold on;
+% contour(X1,X2,X1.^2 + X2.^2);
+% axis equal;
+surf(X1,X2,X1.^2 + X2.^2);
+% axis equal;
