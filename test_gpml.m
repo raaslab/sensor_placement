@@ -6,9 +6,14 @@ xx = 0:0.1:length_e;
 yy = 0:0.1:width_e;
 sensor_noise_std = 0.1;
 length_e = 4; width_e = 4;
-window_size = 8.0;
+window_size = 1.0;
 
-design_matrix = [0 0 normrnd(actual_values(0, 0, length_e, width_e) , 0.1)];
+% robot speed in meters/minute
+robot_speed = 5;
+% measure time in minutes
+measure_time = .05;
+
+design_matrix = [0 0 normrnd(actual_values(1.8, 1.8, length_e, width_e) , 0.1)];
 % 4 0 normrnd(actual_values(4, 0, length_e, width_e) , 0.1);
 % 4 4 normrnd(actual_values(4, 4, length_e, width_e) , 0.1);
 % 0 4 normrnd(actual_values(0, 4, length_e, width_e) , 0.1)];
@@ -35,7 +40,7 @@ final_pred = [X_pred(:) Y_pred(:)];
 num_of_mispredict = [];
 
 i = 1;
-while i <= 40
+while i <= 100
 
 %y = sin(3*x_hori) + sin(3*x_ver) + 0.1*gpml_randn(0.9, 20, 1);  % 20 noisy training targets
   
@@ -46,11 +51,11 @@ covfunc = @covSEiso;              % Squared Exponental covariance function
 likfunc = @likGauss;              % Gaussian likelihood
 
 hyp = struct('mean', [], 'cov', [1 0.5], 'lik', log(sensor_noise_std));
-hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1:2) , design_matrix(:,3))
+%hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1:2) , design_matrix(:,3))
 
 returned_window = return_window(design_matrix(end,:), window_size);
-[mu s2] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), returned_window);
-[mu_total s2_total] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), final_pred);
+[mu s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), returned_window);
+[mu_total s2_total] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), final_pred);
 %Construct a window to consider variance in nearby regions
 
 
@@ -68,10 +73,12 @@ new_y = returned_window(find(s2 == max(s2)), 2);
 % end
 
 design_matrix = [design_matrix; new_x(1,1) new_y(1,1) normrnd(actual_values(new_x(1,1) , new_y(1,1), length_e, width_e) , sensor_noise_std)];
-%mu = reshape(mu, size(X_pred));
+
+mu_total = reshape(mu_total, size(X_pred));
+
 % Calculate the error at each grid location
-%error_variable = abs(100 * (obj - mu)./obj);
-%num_of_mispredict = [num_of_mispredict size(find(error_variable > epsilon_per), 1)];
+error_variable = abs(100 * (obj - mu_total)./obj);
+num_of_mispredict = [num_of_mispredict; size(find(error_variable > epsilon_per), 1)];
 
 % error12_a = error_variable;
 % subplot(2,1,1);
@@ -83,10 +90,15 @@ design_matrix = [design_matrix; new_x(1,1) new_y(1,1) normrnd(actual_values(new_
 % title(sprintf('%d', i));
 % pause(0.1);
 
-surf(X_pred, Y_pred, reshape(s2_total, size(X_pred)));
-pause();
+% surf(X_pred, Y_pred, reshape(s2_total, size(X_pred)));
+% pause();
 i = i + 1;
 end
+
+[mu_total s2_total] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), final_pred);
+mu_total = reshape(mu_total, size(X_pred));
+error_variable = abs(100 * (obj - mu_total) ./ obj);
+num_of_mispredict = [num_of_mispredict; size(find(error_variable > epsilon_per), 1)];
 
 % plot(100 * num_of_mispredict/numel(X_pred));
 % xlabel('Number of sensing locations');
@@ -100,9 +112,14 @@ end
 % %s2
 % % surf(X_pred, Y_pred, reshape(s2, size(X_pred)));
 % %surf(X_pred, Y_pred, reshape(mu, size(X_pred)));
-% dist_mat = sum(sqrt( sum (diff ([design_matrix(:,1) design_matrix(:,2)]).^2, 2)));
+
+% Total measure time = Number of sampling locations * Measure time
+total_measure_time = [1 : size(design_matrix, 1) ]' * measure_time;
+
+% Total time to visit the sensing locations
+total_travel_time = cumsum( [0 ; sqrt( sum (diff ([design_matrix(:,1) design_matrix(:,2)]).^2, 2))])/ robot_speed;
 
 % % error_variable = abs(25 * (obj - mu)./obj);
 % % save('error12_adaptive.txt', 'error_variable', '-ASCII');
-
+plot(total_travel_time + total_measure_time , 100 * num_of_mispredict/ 1681);
 % % surf(X_pred, Y_pred, error_variable);
