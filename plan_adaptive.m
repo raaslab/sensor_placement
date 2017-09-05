@@ -7,13 +7,14 @@ yy = 0:0.1:width_e;
 sensor_noise_std = 0.1;
 length_e = 4; width_e = 4;
 window_size = 1.0;
+num_of_sensing_locations = 600;
 
 % robot speed in meters/minute
 robot_speed = 5;
 % measure time in minutes
 measure_time = .05;
 
-design_matrix = [0 0 normrnd(actual_values(1.8, 1.8, length_e, width_e) , 0.1)];
+design_matrix = [0 0 normrnd(actual_values(2.8, 2.8, length_e, width_e) , 0.1)];
 % 4 0 normrnd(actual_values(4, 0, length_e, width_e) , 0.1);
 % 4 4 normrnd(actual_values(4, 4, length_e, width_e) , 0.1);
 % 0 4 normrnd(actual_values(0, 4, length_e, width_e) , 0.1)];
@@ -26,21 +27,20 @@ design_matrix = [0 0 normrnd(actual_values(1.8, 1.8, length_e, width_e) , 0.1)];
 [X_pred, Y_pred] = meshgrid(xx, yy);
 final_pred = [X_pred(:) Y_pred(:)];
 
-obj = zeros(size(X_pred,1));
+true_value = zeros(size(X_pred,1));
 for i = 1 : size(X_pred, 1)
 	for j = 1 : size(X_pred, 1)
-		obj(i, j) = actual_values(X_pred(i, j), Y_pred(i, j), 4, 4);  
+		true_value(i, j) = actual_values(X_pred(i, j), Y_pred(i, j), 4, 4);  
 	end
 end
 
-true_value = obj;
 
 final_pred = [X_pred(:) Y_pred(:)];
 
 num_of_mispredict = [];
 
 i = 1;
-while i <= 100
+while i <= num_of_sensing_locations
 
 %y = sin(3*x_hori) + sin(3*x_ver) + 0.1*gpml_randn(0.9, 20, 1);  % 20 noisy training targets
   
@@ -77,7 +77,7 @@ design_matrix = [design_matrix; new_x(1,1) new_y(1,1) normrnd(actual_values(new_
 mu_total = reshape(mu_total, size(X_pred));
 
 % Calculate the error at each grid location
-error_variable = abs(100 * (obj - mu_total)./obj);
+error_variable = abs(100 * (true_value - mu_total)./true_value);
 num_of_mispredict = [num_of_mispredict; size(find(error_variable > epsilon_per), 1)];
 
 % error12_a = error_variable;
@@ -93,11 +93,12 @@ num_of_mispredict = [num_of_mispredict; size(find(error_variable > epsilon_per),
 % surf(X_pred, Y_pred, reshape(s2_total, size(X_pred)));
 % pause();
 i = i + 1;
+pause();
 end
 
 [mu_total s2_total] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), final_pred);
 mu_total = reshape(mu_total, size(X_pred));
-error_variable = abs(100 * (obj - mu_total) ./ obj);
+error_variable = abs(100 * (true_value - mu_total) ./ true_value);
 num_of_mispredict = [num_of_mispredict; size(find(error_variable > epsilon_per), 1)];
 
 % plot(100 * num_of_mispredict/numel(X_pred));
@@ -123,3 +124,5 @@ total_travel_time = cumsum( [0 ; sqrt( sum (diff ([design_matrix(:,1) design_mat
 % % save('error12_adaptive.txt', 'error_variable', '-ASCII');
 plot(total_travel_time + total_measure_time , 100 * num_of_mispredict/ 1681);
 % % surf(X_pred, Y_pred, error_variable);
+xlabel('Time spent by robot in Minutes');
+ylabel('Percentage of points having error more than epsilon')
