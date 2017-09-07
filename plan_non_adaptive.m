@@ -2,13 +2,13 @@ clc;
 clear all;
 
 l = 0.5;
-epsilon = 2;
+epsilon = 7;
 delta = 0.3;
 max_diff = 15;
 noise = 0.1;
-specified_number = 500;
+specified_number = 800;
 
-l2 = 50; 
+l2 = 4; 
 zeta = (2 * l2 * epsilon^2 * (5 * noise)^2) / (max_diff^2 * log(2/delta));
 
 lambda = sqrt(-2 * l^2 * log(1 - zeta));
@@ -121,11 +121,9 @@ for i = 1 : size(X_pred, 1)
 			true_value(i, j) = actual_values(X_pred(i, j), Y_pred(i, j), 4, 4);  
 		end
 	end
-
-
 while number_of_sensing_spots <= specified_number
 	
-	gprMdl = fitrgp(design_matrix(1:number_of_sensing_spots, 1:2), design_matrix(1:number_of_sensing_spots, 3), ...
+	gprMdl = fitrgp(design_matrix(1 : number_of_sensing_spots, 1:2), design_matrix(1 : number_of_sensing_spots, 3), ...
 		'KernelFunction','squaredexponential','KernelParameters', kparams0);
 	
 	[ypred, ysd, yint] = predict(gprMdl, final_pred);
@@ -145,3 +143,6 @@ total_travel_time = cumsum( [0; sqrt( sum (diff ([design_matrix(1 : specified_nu
 plot(total_travel_time + total_measure_time , 100 * num_of_mispredict / 1681);
 xlabel('Time spent by robot in Minutes');
 ylabel('Percentage of points having error more than epsilon');
+title('Non - Adaptive Path Planning')
+fileID = fopen('plot_non_adaptive.txt','w');
+fprintf(fileID,'%d \n', [total_travel_time + total_measure_time ; 100 * num_of_mispredict/ 1681] );
