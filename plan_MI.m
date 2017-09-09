@@ -7,7 +7,7 @@ xx = 0:resolution:length_e;
 yy = 0:resolution:width_e;
 sensor_noise_std = 0.1;
 length_e = 4; width_e = 4;
-window_size = 2.0;
+window_size = 4.0;
 num_of_sensing_locations = 100;
 
 % robot speed in meters/minute
@@ -145,7 +145,7 @@ subplot(1,2,2)
 plot(total_travel_time + total_measure_time , 100 * num_of_mispredict/ numel(X_pred) );
 
 i = i + 1;
-pause();
+pause(0.1);
 end
 
 [mu_total s2_total] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, design_matrix(:, 1 : 2), design_matrix(:, 3), final_pred);
