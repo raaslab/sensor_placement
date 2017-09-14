@@ -8,8 +8,7 @@ for g = 1 : size(input_data, 1)
 
 	if 2 <= x && x <= length_e && 0 <= y && y <= width_e
 		temp1 = 15;
-	end
-	if ~ (2 <= x && x <= length_e && 0 <= y && y <= width_e)
+	else
 		mean_1 = [1, 3];
 		mean_2 = [1, 1];
 		temp1 = 15 * exp((-([x, y] - mean_1) * ([x, y] - mean_1)')/std_dev) + 15 * exp((-([x, y] - mean_2) * ([x, y] - mean_2)')/std_dev);

@@ -21,6 +21,10 @@ for ii = 1:length(segments)
     Lon(3*ii-2:3*ii) = [stopsLon(start); stopsLon(stop); NaN];  
 end
 
-lh = plot(Lat,Lon,'k:','LineWidth',2);
+% lh = 
 
-set(lh,'Visible','on'); drawnow; % Add new lines to plot
+plot(Lat,Lon,'-o','LineWidth',2 );
+axis([0 4 0 4]);
+% scatter(stopsLon, stopsLat);
+
+%set(lh,'Visible','on'); drawnow; % Add new lines to plot

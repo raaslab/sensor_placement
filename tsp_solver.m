@@ -1,33 +1,30 @@
-clear all;
-clc;
+function [opt_len] = tsp_solver(stopsLon, stopsLat)
 
-figure;
+% figure;
 
-load('usborder.mat','x','y','xx','yy');
-rng(3,'twister') % makes a plot with stops in Maine & Florida, and is reproducible
-nStops = 30; % you can use any number, but the problem size scales as N^2
-stopsLon = zeros(nStops,1); % allocate x-coordinates of nStops
-stopsLat = stopsLon; % allocate y-coordinates
-n = 1;
-while (n <= nStops)
-    xp = rand*1.5;
-    yp = rand;
-    if inpolygon(xp,yp,x,y) % test if inside the border
-        stopsLon(n) = xp;
-        stopsLat(n) = yp;
-        n = n+1;
-    end
-end
+% load('usborder.mat','x','y','xx','yy');
+% rng(3,'twister') % makes a plot with stops in Maine & Florida, and is reproducible
+% nStops = 30; % you can use any number, but the problem size scales as N^2
+% stopsLon = zeros(nStops,1); % allocate x-coordinates of nStops
+% stopsLat = stopsLon; % allocate y-coordinates
+% n = 1;
+% while (n <= nStops)
+%     xp = rand*1.5;
+%     yp = rand;
+%     if inpolygon(xp,yp,x,y) % test if inside the border
+%         stopsLon(n) = xp;
+%         stopsLat(n) = yp;
+%         n = n+1;
+%     end
+% end
 
-% stopsLon = [0.5 1 1.5 2.0 3.1]';
-% stopsLat = [1.0 0.8 0 0.2 2.1]';
-% nStops = numel(stopsLat);
+nStops = numel(stopsLat);
 
-plot(x,y,'Color','red'); % draw the outside border
-hold on
+% plot(x,y,'Color','red'); % draw the outside border
+% hold on
 % Add the stops to the map
-plot(stopsLon,stopsLat,'*b')
-hold off
+plot(stopsLon, stopsLat,'*b');
+% hold off
 
 idxs = nchoosek(1:nStops,2);
 
@@ -53,15 +50,14 @@ ub = ones(lendist,1);
 opts = optimoptions('intlinprog','Display','off','Heuristics','advanced');
 [x_tsp,costopt,exitflag,output] = intlinprog(dist,intcon,[],[],Aeq,beq,lb,ub,opts);
 
-hold on
 segments = find(x_tsp); % Get indices of lines on optimal path
 lh = zeros(nStops,1); % Use to store handles to lines on plot
 lh = updateSalesmanPlot(lh,x_tsp,idxs,stopsLon,stopsLat);
-title('Solution with Subtours');
+%title('Solution with Subtours');
 
 tours = detectSubtours(x_tsp,idxs);
 numtours = length(tours); % number of subtours
-fprintf('# of subtours: %d\n',numtours);
+%fprintf('# of subtours: %d\n',numtours);
 
 A = spalloc(0,lendist,0); % Allocate a sparse linear inequality constraint matrix
 b = [];
@@ -87,15 +83,18 @@ while numtours > 1 % repeat until there is just one subtour
     % Try to optimize again
     [x_tsp,costopt,exitflag,output] = intlinprog(dist,intcon,A,b,Aeq,beq,lb,ub,opts);
     
-    % Visualize result
-    lh = updateSalesmanPlot(lh,x_tsp,idxs,stopsLon,stopsLat);
     
     % How many subtours this time?
     tours = detectSubtours(x_tsp,idxs);
     numtours = length(tours); % number of subtours
-    fprintf('# of subtours: %d\n',numtours);
+    if numtours == 1
+    	% Visualize result
+    	lh = updateSalesmanPlot(lh,x_tsp,idxs,stopsLon,stopsLat);
+    end
+    %fprintf('# of subtours: %d\n',numtours);
 end
 
-title('Solution with Subtours Eliminated');
-hold off
-dist'*x_tsp
+% title('Solution with Subtours Eliminated');
+% hold off
+
+opt_len = dist'*x_tsp;
