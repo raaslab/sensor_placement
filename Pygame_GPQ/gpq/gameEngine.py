@@ -255,16 +255,16 @@ class GameState:
         # Get the current location and the readings there.
 
         if action == 0:  # Turn right.
-            self.car_body.angle -= .3
+            self.car_body.angle -= math.pi/3
             self.car_velocity = 40
         elif action == 1:  # Turn left.
-            self.car_body.angle += .3
+            self.car_body.angle += math.pi/3
             self.car_velocity = 40
         elif action == 2:  # Go straight.
             self.car_body.angle += 0.0
             self.car_velocity = 40
         elif action == 3:
-            self.car_velocity = -10
+            self.car_velocity = -40
         '''
         # Move obstacles.
         if self.num_steps % 100 == 0:
@@ -282,7 +282,7 @@ class GameState:
 
         # Update the screen and stuff.
         screen.fill(THECOLORS["black"])
-        #pymunk.pygame_util.draw(screen, self.space)
+        # pymunk.pygame_util.draw(screen, self.space)
         options = pymunk.pygame_util.DrawOptions(screen)
         self.space.debug_draw(options)
         self.space.step(1./10)
@@ -299,7 +299,7 @@ class GameState:
         if self.car_is_crashed(readings):
             self.crashed = True
             #reward = -500
-            reward = -5
+            reward = -50
             self.recover_from_crash(driving_direction)
         else:
             # Higher readings are better, so return the sum.
@@ -328,7 +328,7 @@ class GameState:
         self.cat_body.velocity = speed * direction
     '''
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1: #or readings[3] == 1 or readings[4] == 1 or readings[5] == 1:
+        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1:# or readings[3] == 1 #or readings[4] == 1 or readings[5] == 1:
             return True
         else:
             return False
@@ -374,16 +374,17 @@ class GameState:
         """
         # Make our arms.
         arm_left = self.make_sonar_arm(x, y)
-        arm_middle1 = arm_left
+        arm_forward = arm_left
         #arm_middle2 = arm_middle1
         #arm_middle3 = arm_middle2
         #arm_middle4 = arm_middle3
-        arm_right = arm_middle1
-
+        arm_right = arm_forward
+        # arm_back = arm_right
         # Rotate them and get readings.
-        readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/2))
-        readings.append(self.get_arm_distance(arm_middle1, x, y, angle, 0.0))
-        readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/2))
+        readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
+        readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0.0))
+        readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
+        # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
         #readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
         #readings.append(self.get_arm_distance(arm_middle4, x, y, angle, -0.5))
         #readings.append(self.get_arm_distance(arm_right, x, y, angle, -1.0))
@@ -451,11 +452,10 @@ class GameState:
 
 if __name__ == "__main__":
     game_state = GameState()
-    prev_state = [[2,2,2]]
+    prev_state = [[2, 2, 2, 2]]
     while True:
-        time.sleep(1)
-        currReward, state = game_state.frame_step((random.randint(0, 2)))
-        time.sleep(0.05)
+        currReward, state = game_state.frame_step((random.randint(0, 3)))
+        time.sleep(0.25)
         print "prev State"
         print prev_state
         print "current_state:"
