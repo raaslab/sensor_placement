@@ -20,12 +20,6 @@ class gp_prediction():
 		self.kernel = C(10.0, (1e-3, 1e3)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3))	
 		self.gp = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=9, alpha = 1e-2)
 		self.gamma = 0.9
-
-	# def gpq(self, record):
-	# 	record = np.array(record)
-	# 	input_ = record[:, 0 : 4]
-	# 	output_ = record[:, 4]
-	# 	print self.gp.fit(input_, output_).L_.shape
 	
 	def predict_maxq(self, state):	
 		# if len(record) > 0:
@@ -59,13 +53,11 @@ if __name__ == "__main__":
 	epsilon = 0.1
 	game_obj = gameEngine.GameState()
 	gp_obj = gp_prediction()
-	# plot_obj = plotting.plot_class()
 	sum_of_reward_per_epoch = 0
 	curr_state = [2, 2, 2]
 	curr_state = np.array(curr_state)
-	# next_state = [[20,20,20,20,20,20]]
 	timestr = time.strftime("%Y%m%d-%H%M%S")
-	
+	sum_of_reward_per_epoch = 0
 	while True:
 		if i != 0:
 			randomNumber = random.random()
@@ -78,9 +70,18 @@ if __name__ == "__main__":
 		
 		curr_reward, next_state = game_obj.frame_step(action)
 		newRecord = curr_state.tolist() + [action] + [curr_reward + round(gamma * gp_obj.predict_maxq(next_state), 2)]
+		sum_of_reward_per_epoch += curr_reward
+		if i % 5 == 0:
+			print sum_of_reward_per_epoch
+			sum_of_reward_per_epoch = 0
 		record.append(newRecord)
 		input_ = [item[:-1] for item in record]
 		output_ = [item[-1] for item in record]
-		gp_obj.gp.fit(input_, output_)
+		eig_values = np.linalg.eig(gp_obj.gp.fit(input_, output_).K)[0]
+
+		# Check the condition number of the matrix
+		if np.max(eig_values)/np.min(eig_values) > 10:
+			record = record[:-1]
+		# time.sleep(0.5)
 		curr_state = next_state[0]
 		i += 1

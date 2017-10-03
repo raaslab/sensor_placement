@@ -256,15 +256,15 @@ class GameState:
 
         if action == 0:  # Turn right.
             self.car_body.angle -= math.pi/3
-            self.car_velocity = 40
+            self.car_velocity = 50
         elif action == 1:  # Turn left.
             self.car_body.angle += math.pi/3
-            self.car_velocity = 40
+            self.car_velocity = 50
         elif action == 2:  # Go straight.
             self.car_body.angle += 0.0
-            self.car_velocity = 40
+            self.car_velocity = 50
         elif action == 3:
-            self.car_velocity = -40
+            self.car_velocity = -50
         '''
         # Move obstacles.
         if self.num_steps % 100 == 0:
