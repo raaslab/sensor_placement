@@ -27,7 +27,7 @@ class gp_prediction():
 	# 	output_ = record[:, 4]
 	# 	print self.gp.fit(input_, output_).L_.shape
 	
-	def predict_maxq(self, state, record):	
+	def predict_maxq(self, state):	
 		# if len(record) > 0:
 		# 	self.gpq(record)
 		all_actions = []
@@ -77,12 +77,10 @@ if __name__ == "__main__":
 			action = random.randint(0, 3)
 		
 		curr_reward, next_state = game_obj.frame_step(action)
-		newRecord = curr_state.tolist() + [action] + [curr_reward + round(gamma * gp_obj.predict_maxq(next_state, record), 2)]
+		newRecord = curr_state.tolist() + [action] + [curr_reward + round(gamma * gp_obj.predict_maxq(next_state), 2)]
 		record.append(newRecord)
-		record = np.array(record)
-		input_ = record[:, 0 : 4]
-		output_ = record[:, 4]
+		input_ = [item[:-1] for item in record]
+		output_ = [item[-1] for item in record]
 		gp_obj.gp.fit(input_, output_)
-		print '+++++++++'
 		curr_state = next_state[0]
 		i += 1
