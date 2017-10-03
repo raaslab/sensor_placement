@@ -32,6 +32,7 @@ class GameState:
         self.numOflasersData = 10
         self.spread = 10
         self.distance = 10
+        
         # Physics stuff.
         self.space = pymunk.Space()
         self.space.gravity = pymunk.Vec2d(0., 0.)
@@ -63,7 +64,7 @@ class GameState:
             s.collision_type = 1
             s.color = THECOLORS['white']
         self.space.add(static)
-        self.env4()
+        self.env3()
 
         # Create a moving cat
         #self.create_cat()
@@ -253,17 +254,17 @@ class GameState:
     def frame_step(self, action):
         # Get the current location and the readings there.
 
-        if action == 0:  # Turn left.
-            self.car_body.angle -= .2
+        if action == 0:  # Turn right.
+            self.car_body.angle -= .3
             self.car_velocity = 40
-        elif action == 1:  # Turn right.
-            self.car_body.angle += .2
+        elif action == 1:  # Turn left.
+            self.car_body.angle += .3
             self.car_velocity = 40
-        elif action == 2:  # Turn right.
+        elif action == 2:  # Go straight.
             self.car_body.angle += 0.0
             self.car_velocity = 40
         elif action == 3:
-            self.car_velocity = -20
+            self.car_velocity = -10
         '''
         # Move obstacles.
         if self.num_steps % 100 == 0:
@@ -293,7 +294,6 @@ class GameState:
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
         state = np.array([readings])
-
         # Set the reward.
         # Car crashed when any reading == 1
         if self.car_is_crashed(readings):
@@ -381,9 +381,9 @@ class GameState:
         arm_right = arm_middle1
 
         # Rotate them and get readings.
-        readings.append(self.get_arm_distance(arm_left, x, y, angle, 0.75))
+        readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/2))
         readings.append(self.get_arm_distance(arm_middle1, x, y, angle, 0.0))
-        readings.append(self.get_arm_distance(arm_right, x, y, angle, -0.75))
+        readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/2))
         #readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
         #readings.append(self.get_arm_distance(arm_middle4, x, y, angle, -0.5))
         #readings.append(self.get_arm_distance(arm_right, x, y, angle, -1.0))
@@ -425,7 +425,7 @@ class GameState:
     def make_sonar_arm(self, x, y):
         spread = self.spread  # Default spread.
         distance = self.distance  # Gap before first sensor.
-        arm_points = []
+        arm_points = [] 
         # Make an arm. We build it flat because we'll rotate it about the
         # center later.
         for i in range(0, self.numOflasersData):
@@ -453,13 +453,14 @@ if __name__ == "__main__":
     game_state = GameState()
     prev_state = [[2,2,2]]
     while True:
+        time.sleep(1)
         currReward, state = game_state.frame_step((random.randint(0, 2)))
-        time.sleep(0.5)
+        time.sleep(0.05)
         print "prev State"
         print prev_state
         print "current_state:"
         print state
         print "------"
-
+        
         prev_state = state
 
