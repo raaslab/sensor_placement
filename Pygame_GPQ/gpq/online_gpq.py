@@ -38,17 +38,15 @@ class gp_prediction():
 		all_actions = []
 		for action in range(0, 4):
 			test_input = curr_state.tolist() + [action]
-			all_actions.append(test_input)
-		
+			all_actions.append(test_input)		
 		all_actions = np.array(all_actions)
 		q_pred, q_pred_var = self.gp.predict(all_actions, return_std = True, return_cov=False) 
-		list_q = list(q_pred)
-		maxIndex  = list_q.index( max(list_q) )
-		return maxIndex
+		return random.choice(list(np.where(q_pred == np.max(q_pred))[0]))
 
 if __name__ == "__main__":
-	i = 0
+	num_of_steps = 1
 	j = 0
+	condition_number = 10
 	gamma = 0.9
 	epsilon = 0.1
 	game_obj = gameEngine.GameState()
@@ -58,30 +56,50 @@ if __name__ == "__main__":
 	curr_state = np.array(curr_state)
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	sum_of_reward_per_epoch = 0
-	while True:
-		if i != 0:
+	plot_reward_ = []
+	f = open("condition_10_reward.txt","w+")
+	g = open("condition_10_comp_time.txt","w+")
+	while num_of_steps <= 1500:
+		print num_of_steps
+		if num_of_steps != 1:
 			randomNumber = random.random()
 			if randomNumber >= epsilon:
 				action = gp_obj.choose_action(curr_state)
 			else:
 				action = random.randint(0, 3)		
-		elif i == 0:
+		elif num_of_steps == 1:
 			action = random.randint(0, 3)
 		
 		curr_reward, next_state = game_obj.frame_step(action)
+		
+		start_comp_time = time.time()
+		# Add reward+gamma*max(Q) as target value for current transition
 		newRecord = curr_state.tolist() + [action] + [curr_reward + round(gamma * gp_obj.predict_maxq(next_state), 2)]
-		sum_of_reward_per_epoch += curr_reward
-		if i % 5 == 0:
-			print sum_of_reward_per_epoch
-			sum_of_reward_per_epoch = 0
 		record.append(newRecord)
 		input_ = [item[:-1] for item in record]
 		output_ = [item[-1] for item in record]
 		eig_values = np.linalg.eig(gp_obj.gp.fit(input_, output_).K)[0]
-
+		g.write("%s\n" % (time.time() - start_comp_time))
 		# Check the condition number of the matrix
-		if np.max(eig_values)/np.min(eig_values) > 10:
-			record = record[:-1]
-		# time.sleep(0.5)
+		if np.max(eig_values)/np.min(eig_values) > condition_number:
+			record = record[:-1] 
+		# Go to next state
 		curr_state = next_state[0]
-		i += 1
+
+
+		sum_of_reward_per_epoch += curr_reward
+		if num_of_steps % 5 == 0:
+			f.write("%d\n" % sum_of_reward_per_epoch)
+			# print sum_of_reward_per_epoch
+			# plot_reward_.append(sum_of_reward_per_epoch)
+			sum_of_reward_per_epoch = 0
+		
+
+		
+		num_of_steps += 1
+f.close()
+g.close()
+# print plot_reward_
+# plt.plot(plot_reward_)
+# plt.show()	
+# time.sleep(15)
