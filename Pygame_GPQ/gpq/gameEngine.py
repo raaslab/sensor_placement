@@ -125,30 +125,30 @@ class GameState:
 
     def env3(self):
         self.obstacles = []
-        self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
-        self.obstacles.append(self.create_obstacle(50,200,1000,200,10))
+        # self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
+        # self.obstacles.append(self.create_obstacle(50,200,1000,200,10))
 
-        self.obstacles.append(self.create_obstacle(50,200,50,400,10))
-        self.obstacles.append(self.create_obstacle(0,400,50,400,10))
+        # self.obstacles.append(self.create_obstacle(50,200,50,400,10))
+        # self.obstacles.append(self.create_obstacle(0,400,50,400,10))
 
-        self.obstacles.append(self.create_obstacle(1000,50,1400,400,10)) 
-        self.obstacles.append(self.create_obstacle(1000,200,1200,375,10)) 
+        # self.obstacles.append(self.create_obstacle(1000,50,1400,400,10)) 
+        # self.obstacles.append(self.create_obstacle(1000,200,1200,375,10)) 
 
-        self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
-        self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
+        # self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
+        # self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
 
-        self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
-        self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
+        # self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
+        # self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
 
-        self.obstacles.append(self.create_obstacle(800,800,800,500,10))
+        # self.obstacles.append(self.create_obstacle(800,800,800,500,10))
 
-        self.obstacles.append(self.create_obstacle(800,400,300,400,10))
+        # self.obstacles.append(self.create_obstacle(800,400,300,400,10))
 
-        self.obstacles.append(self.create_obstacle(800,500,600,500,10))
-        self.obstacles.append(self.create_obstacle(400,500,300,500,10))
+        # self.obstacles.append(self.create_obstacle(800,500,600,500,10))
+        # self.obstacles.append(self.create_obstacle(400,500,300,500,10))
 
-        self.obstacles.append(self.create_obstacle(400,500,400,800,10))
-        self.obstacles.append(self.create_obstacle(600,500,600,800,10))
+        # self.obstacles.append(self.create_obstacle(400,500,400,800,10))
+        # self.obstacles.append(self.create_obstacle(600,500,600,800,10))
 
         #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
@@ -255,16 +255,16 @@ class GameState:
         # Get the current location and the readings there.
 
         if action == 0:  # Turn right.
-            self.car_body.angle -= math.pi/3
-            self.car_velocity = 50
+            self.car_body.angle -= math.pi/2
+            self.car_velocity = 100
         elif action == 1:  # Turn left.
-            self.car_body.angle += math.pi/3
-            self.car_velocity = 50
+            self.car_body.angle += math.pi/2
+            self.car_velocity = 100
         elif action == 2:  # Go straight.
             self.car_body.angle += 0.0
-            self.car_velocity = 50
+            self.car_velocity = 100
         elif action == 3:
-            self.car_velocity = -50
+            self.car_velocity = -100
         '''
         # Move obstacles.
         if self.num_steps % 100 == 0:
@@ -275,7 +275,7 @@ class GameState:
         if self.num_steps % 5 == 0:
             self.move_cat()
         '''
-
+        
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         #self.car_body.velocity = 100 * driving_direction
         self.car_body.velocity = self.car_velocity * driving_direction
@@ -304,7 +304,7 @@ class GameState:
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = int(self.sum_readings(readings))
+            reward = int(self.sum_readings(readings)) + 100 * (x + y)
             #reward = 1
         self.num_steps += 1
         return reward, state
@@ -328,7 +328,7 @@ class GameState:
         self.cat_body.velocity = speed * direction
     '''
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1:# or readings[3] == 1 #or readings[4] == 1 or readings[5] == 1:
+        if readings[0] == 1: #or readings[1] == 1 or readings[2] == 1:# or readings[3] == 1 #or readings[4] == 1 or readings[5] == 1:
             return True
         else:
             return False
@@ -339,21 +339,21 @@ class GameState:
         """
         while self.crashed:
             # Go backwards.
-            #self.car_body.velocity = -100 * driving_direction
-            #self.car_body.velocity = -self.car_velocity * driving_direction
-            #self.car_body.position = 200,200
+            self.car_body.velocity = -100 * driving_direction
+            # self.car_body.velocity = -self.car_velocity * driving_direction
+            # self.car_body.position = 250, 250
             self.crashed = False
             
-            for i in range(10):
-                #self.car_body.angle += .2  # Turn a little.
-                screen.fill(THECOLORS["red"])  # Red is scary!
-                #draw(screen, self.space)
-                options = pymunk.pygame_util.DrawOptions(screen)
-                self.space.debug_draw(options)
-                self.space.step(1./10)
-                #if draw_screen:
-                   #pygame.display.flip()
-                clock.tick()
+            # for i in range(10):
+            #     #self.car_body.angle += .2  # Turn a little.
+            #     screen.fill(THECOLORS["red"])  # Red is scary!
+            #     #draw(screen, self.space)
+            #     options = pymunk.pygame_util.DrawOptions(screen)
+            #     self.space.debug_draw(options)
+            #     self.space.step(1./10)
+            #     #if draw_screen:
+            #        #pygame.display.flip()
+            #     clock.tick()
             
 
     def sum_readings(self, readings):
@@ -373,21 +373,21 @@ class GameState:
         in a sonar "arm" is non-zero, then that arm returns a distance of 5.
         """
         # Make our arms.
-        arm_left = self.make_sonar_arm(x, y)
-        arm_forward = arm_left
+        # arm_left = self.make_sonar_arm(x, y)
+        arm_forward = self.make_sonar_arm(x, y)
         #arm_middle2 = arm_middle1
         #arm_middle3 = arm_middle2
         #arm_middle4 = arm_middle3
-        arm_right = arm_forward
+        # arm_right = arm_forward
         # arm_back = arm_right
         # Rotate them and get readings.
-        readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
+        # readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
         readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0.0))
-        readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
+        # readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
         # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
-        #readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
-        #readings.append(self.get_arm_distance(arm_middle4, x, y, angle, -0.5))
-        #readings.append(self.get_arm_distance(arm_right, x, y, angle, -1.0))
+        # readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
+        # readings.append(self.get_arm_distance(arm_middle4, x, y, angle, -0.5))
+        # readings.append(self.get_arm_distance(arm_right, x, y, angle, -1.0))
 
         if show_sensors:
             pygame.display.update()
