@@ -38,7 +38,7 @@ class GameState:
         self.space.gravity = pymunk.Vec2d(0., 0.)
 
         # Create the car.
-        self.create_car(250, 250, 0.5)
+        self.create_car(250, 250, 0)
 
         # Record steps.
         self.num_steps = 0
@@ -153,12 +153,14 @@ class GameState:
         #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
         self.obstacles.append(self.create_circular_obstacle(500,800,100))
+        self.obstacles.append(self.create_circular_obstacle(750,750,5))
 
-        self.obstacles.append(self.create_obstacle(300,500,300,600,10))
-        self.obstacles.append(self.create_obstacle(300,400,300,300,10))
 
-        self.obstacles.append(self.create_obstacle(300,300,100,450,10))
-        self.obstacles.append(self.create_obstacle(300,600,100,450,10))
+        # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
+        # self.obstacles.append(self.create_obstacle(300,400,300,300,10))
+
+        # self.obstacles.append(self.create_obstacle(300,300,100,450,10))
+        # self.obstacles.append(self.create_obstacle(300,600,100,450,10))
 
     def env4(self):
         self.obstacles = []
@@ -254,17 +256,18 @@ class GameState:
     def frame_step(self, action):
         # Get the current location and the readings there.
 
-        if action == 0:  # Turn right.
-            self.car_body.angle -= math.pi/2
-            self.car_velocity = 100
-        elif action == 1:  # Turn left.
-            self.car_body.angle += math.pi/2
-            self.car_velocity = 100
-        elif action == 2:  # Go straight.
+        # if action == 0:  
+        #     self.car_body.angle -= math.pi/2
+        #     self.car_velocity = 100
+        # elif action == 2:  
+        #     self.car_body.angle += math.pi/2
+        #     self.car_velocity = 100
+        if action == 1:  # Go straight.
             self.car_body.angle += 0.0
             self.car_velocity = 100
         elif action == 3:
-            self.car_velocity = -100
+            self.car_velocity = 100
+            self.car_body.angle += math.pi
         '''
         # Move obstacles.
         if self.num_steps % 100 == 0:
@@ -279,7 +282,6 @@ class GameState:
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         #self.car_body.velocity = 100 * driving_direction
         self.car_body.velocity = self.car_velocity * driving_direction
-
         # Update the screen and stuff.
         screen.fill(THECOLORS["black"])
         # pymunk.pygame_util.draw(screen, self.space)
@@ -293,10 +295,12 @@ class GameState:
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
-        state = np.array([readings])
+        # print readings
+        state = np.array( [[x] + readings])
+
         # Set the reward.
         # Car crashed when any reading == 1
-        if self.car_is_crashed(readings):
+        if False:
             self.crashed = True
             #reward = -500
             reward = -50
@@ -304,7 +308,7 @@ class GameState:
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = int(self.sum_readings(readings)) + 100 * (x + y)
+            reward = int(self.sum_readings(readings)) -  10 * abs(x - 750) 
             #reward = 1
         self.num_steps += 1
         return reward, state
@@ -382,7 +386,7 @@ class GameState:
         # arm_back = arm_right
         # Rotate them and get readings.
         # readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
-        readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0.0))
+        # readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0.0))
         # readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
         # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
         # readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
