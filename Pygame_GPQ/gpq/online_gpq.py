@@ -3,7 +3,7 @@ import numpy as np
 import math
 import random
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 from scipy.stats import multivariate_normal
 from scipy.integrate import dblquad
 import matplotlib.pyplot as plt
@@ -16,9 +16,9 @@ plt.ion()
 
 class gp_prediction():
 	def __init__(self):
-		self.rbf_init_length_scale = np.array([40, 0.01])
-		self.kernel = C(100.0, (1e-3, 1e3)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3))	
-		self.gp = GaussianProcessRegressor(kernel=self.kernel, optimizer = None, n_restarts_optimizer=9, normalize_y=True, alpha = 1e-2)
+		self.rbf_init_length_scale = np.array([300, 40])
+		self.kernel = C(1347.0, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 1.0, noise_level_bounds = (1, 10.0)) 	
+		self.gp = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=9)
 		self.gamma = 0.9
 	
 	def predict_maxq(self, state):	
@@ -37,7 +37,7 @@ class gp_prediction():
 	def choose_action(self, curr_state):
 		all_actions = []
 		for action in [1, 3]:
-			test_input = curr_state.tolist() + [(action - 1) * math.pi/2]
+			test_input = curr_state.tolist() + [(action -	 1) * math.pi/2]
 			all_actions.append(test_input)		
 		all_actions = np.array(all_actions)
 		q_pred, q_pred_var = self.gp.predict(all_actions, return_std = True, return_cov=False) 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 	actions = [1, 3]
 	condition_number = 1000
 	gamma = 0.9
-	epsilon = 0.05
+	epsilon = 0.1
 	game_obj = gameEngine.GameState()
 	gp_obj = gp_prediction()
 	sum_of_reward_per_epoch = 0
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 	plot_reward_ = []
 	f = open("reward.txt","w+")
 	# g = open("condition_10_comp_time.txt","w+")
-	while  num_of_steps <= 2500:
+	while  num_of_steps < 50:
 		if num_of_steps != 1:
 			randomNumber = random.random()
 			if randomNumber >= epsilon:
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 		# g.write("%s\n" % (time.time() - start_comp_time))
 		# Check the condition number of the matrix
 		if np.max(eig_values)/np.min(eig_values) > condition_number:
-			record = record[:-1]
+			record = record
 		# print len(record)
 		# Go to next state
 		curr_state = next_state[0]
@@ -102,15 +102,18 @@ all_actions = []
 
 input_ = [item[:-1] for item in record]
 output_ = [item[-1] for item in record]
-		
+
+# print input_
+
 		# Instance of self.fit function
-instance = gp_obj.gp.fit(input_, output_)
-for state in range(250, 1000):
+instance = np.exp(gp_obj.gp.fit(input_, output_).kernel_.theta)
+# print instance
+
+for state in range(200, 1300, 10):
 	for action in [1, 3]:
-		test_input = [state] + [(action - 1) * math.pi/2]
-		all_actions.append(test_input)		
-		q_pred, q_pred_var = gp_obj.gp.predict(all_actions, return_std = True, return_cov=False)
-		f.write("%d \t %f \t %d\n" % (state, (action - 1) * math.pi/2, q_pred[0]))
+		test_input = [[state] + [(action - 1) * math.pi/2]]		
+		q_pred, q_pred_var = gp_obj.gp.predict(test_input, return_std = True)
+		f.write("%d \t %f \t %s\n" % (state, (action - 1) * math.pi/2, q_pred[0]))
 # for item in record:
 # 	f.write("%d \t %d\n" %  np.array(item[:-1]))
 f.close()

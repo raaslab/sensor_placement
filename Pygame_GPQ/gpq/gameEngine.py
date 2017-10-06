@@ -153,7 +153,7 @@ class GameState:
         #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
         self.obstacles.append(self.create_circular_obstacle(500,800,100))
-        self.obstacles.append(self.create_circular_obstacle(750,750,5))
+        self.obstacles.append(self.create_circular_obstacle(750,260,5))
 
 
         # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
@@ -255,13 +255,12 @@ class GameState:
 
     def frame_step(self, action):
         # Get the current location and the readings there.
-
-        # if action == 0:  
-        #     self.car_body.angle -= math.pi/2
-        #     self.car_velocity = 100
-        # elif action == 2:  
-        #     self.car_body.angle += math.pi/2
-        #     self.car_velocity = 100
+        if action == 0:  
+            self.car_body.angle -= math.pi/2
+            self.car_velocity = 100
+        elif action == 2:  
+            self.car_body.angle += math.pi/2
+            self.car_velocity = 100
         if action == 1:  # Go straight.
             self.car_body.angle += 0.0
             self.car_velocity = 100
@@ -280,12 +279,14 @@ class GameState:
         '''
         
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
+        self.car_body.angle = 0
         #self.car_body.velocity = 100 * driving_direction
         self.car_body.velocity = self.car_velocity * driving_direction
         # Update the screen and stuff.
         screen.fill(THECOLORS["black"])
         # pymunk.pygame_util.draw(screen, self.space)
         options = pymunk.pygame_util.DrawOptions(screen)
+        
         self.space.debug_draw(options)
         self.space.step(1./10)
         if draw_screen:
@@ -296,7 +297,7 @@ class GameState:
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
         # print readings
-        state = np.array( [[x] + readings])
+        state = np.array( [[x] + [y] + readings])
 
         # Set the reward.
         # Car crashed when any reading == 1
@@ -308,7 +309,7 @@ class GameState:
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = int(self.sum_readings(readings)) -  10 * abs(x - 750) 
+            reward = int(self.sum_readings(readings)) + 5000/(abs(x - 750)+ 0.001) 
             #reward = 1
         self.num_steps += 1
         return reward, state
