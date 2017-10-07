@@ -16,7 +16,7 @@ plt.ion()
 
 class gp_prediction():
 	def __init__(self):
-		self.rbf_init_length_scale = np.array([300, 300, 5])
+		self.rbf_init_length_scale = np.array([300, 300, 1, 5])
 		self.kernel = C(1347.0, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 1.0, noise_level_bounds = (1, 10.0)) 	
 		self.gp = GaussianProcessRegressor(kernel=self.kernel, optimizer = None, n_restarts_optimizer=9)
 		self.gamma = 0.9
@@ -36,7 +36,7 @@ class gp_prediction():
 
 	def choose_action(self, curr_state):
 		all_actions = []
-		print curr_state
+		#print curr_state
 		for action in range(0, 4):
 			test_input = curr_state.tolist() + [(action -	 1) * math.pi/2]
 			all_actions.append(test_input)		
@@ -55,15 +55,15 @@ if __name__ == "__main__":
 	game_obj = gameEngine.GameState()
 	gp_obj = gp_prediction()
 	sum_of_reward_per_epoch = 0
-	curr_state = [250, 250]
+	curr_state = [250, 250, 10]
 	curr_state = np.array(curr_state)
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	sum_of_reward_per_epoch = 0
 	plot_reward_ = []
 	f = open("reward.txt","w+")
 	# g = open("condition_10_comp_time.txt","w+")
-	while  num_of_steps <= 50:
-		print num_of_steps
+	while  num_of_steps <= 1000:
+		# print num_of_steps
 		if num_of_steps != 1:
 			randomNumber = random.random()
 			if randomNumber >= epsilon:
@@ -108,18 +108,18 @@ output_ = [item[-1] for item in record]
 # print input_
 
 		# Instance of self.fit function
-instance = np.exp(gp_obj.gp.fit(input_, output_).kernel_.theta)
+# instance = np.exp(gp_obj.gp.fit(input_, output_).kernel_.theta)
 # print instance
 
-for statex in range(400, 1300, 50):
-	for statey in range(400, 900, 50):
-		for action in range(0, 4):
-			test_input = [[statex] + [statey] + [(action - 1) * math.pi/2]]		
-			q_pred, q_pred_var = gp_obj.gp.predict(test_input, return_std = True)
-			f.write("%d \t %d \t %f \t %s\n" % (statex, statey, (action - 1) * math.pi/2, q_pred[0]))
-# for item in record:
-# 	f.write("%d \t %d\n" %  np.array(item[:-1]))
-f.close()
+# for statex in range(400, 1300, 50):
+# 	for statey in range(400, 900, 50):
+# 		for action in range(0, 4):
+# 			test_input = [[statex] + [statey] + [(action - 1) * math.pi/2]]		
+# 			q_pred, q_pred_var = gp_obj.gp.predict(test_input, return_std = True)
+# 			f.write("%d \t %d \t %f \t %s\n" % (statex, statey, (action - 1) * math.pi/2, q_pred[0]))
+# # for item in record:
+# # 	f.write("%d \t %d\n" %  np.array(item[:-1]))
+# f.close()
 
 # g.close()
 # print plot_reward_

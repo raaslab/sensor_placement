@@ -134,11 +134,11 @@ class GameState:
         # self.obstacles.append(self.create_obstacle(1000,50,1400,400,10)) 
         # self.obstacles.append(self.create_obstacle(1000,200,1200,375,10)) 
 
-        # self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
-        # self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
+        # # self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
+        # # self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
 
-        # self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
-        # self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
+        # # self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
+        # # self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
 
         # self.obstacles.append(self.create_obstacle(800,800,800,500,10))
 
@@ -153,7 +153,7 @@ class GameState:
         #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
         # self.obstacles.append(self.create_circular_obstacle(500,800,100))
-        self.obstacles.append(self.create_circular_obstacle(1050, 650, 5))
+        # self.obstacles.append(self.create_circular_obstacle(1050, 650, 5))
 
 
         # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
@@ -197,7 +197,7 @@ class GameState:
         # STATIC OBSTACLE, IGNORE MASS AND MOMENT
         c_body = pymunk.Body(10000, pymunk.inf,body_type=cp.STATIC)
         #vertices = [(200.0,200.0),(700.0,200.0),(700.0,600.0),(200.0,600.0)]
-        c_shape = pymunk.Segment(c_body,(x1,y1),(x2,y2),radius=r)
+        c_shape = pymunk.Segment(c_body,(x1,y1),(x2,y2), radius=r)
         c_shape.elasticity = 0.0
         #c_body.position = x, y
         c_shape.color = THECOLORS["white"]
@@ -245,7 +245,7 @@ class GameState:
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
         self.car_body = pymunk.Body(1, inertia)
         self.car_body.position = x, y
-        self.car_shape = pymunk.Circle(self.car_body, 10)
+        self.car_shape = pymunk.Circle(self.car_body, 5)
         self.car_shape.color = THECOLORS["green"]
         self.car_shape.elasticity = 0.0
         self.car_body.angle = r
@@ -296,12 +296,13 @@ class GameState:
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
+        
         # print readings
         state = np.array( [[x] + [y] + readings])
 
         # Set the reward.
         # Car crashed when any reading == 1
-        if False:
+        if self.car_is_crashed(readings):
             self.crashed = True
             #reward = -500
             reward = -50
@@ -312,6 +313,7 @@ class GameState:
             reward = int(self.sum_readings(readings)) + 5000000/(abs(x - 1050) + abs(y - 650) + .0001) 
             #reward = 1
         self.num_steps += 1
+
         return reward, state
 
     '''
@@ -344,21 +346,21 @@ class GameState:
         """
         while self.crashed:
             # Go backwards.
-            self.car_body.velocity = -100 * driving_direction
+            self.car_body.velocity = 100 * driving_direction
             # self.car_body.velocity = -self.car_velocity * driving_direction
-            # self.car_body.position = 250, 250
+            self.car_body.position = 250, 250
             self.crashed = False
             
-            # for i in range(10):
-            #     #self.car_body.angle += .2  # Turn a little.
-            #     screen.fill(THECOLORS["red"])  # Red is scary!
-            #     #draw(screen, self.space)
-            #     options = pymunk.pygame_util.DrawOptions(screen)
-            #     self.space.debug_draw(options)
-            #     self.space.step(1./10)
-            #     #if draw_screen:
-            #        #pygame.display.flip()
-            #     clock.tick()
+            for i in range(10):
+                #self.car_body.angle += .2  # Turn a little.
+                screen.fill(THECOLORS["red"])  # Red is scary!
+                #draw(screen, self.space)
+                options = pymunk.pygame_util.DrawOptions(screen)
+                self.space.debug_draw(options)
+                self.space.step(1./10)
+                #if draw_screen:
+                   #pygame.display.flip()
+                clock.tick()
             
 
     def sum_readings(self, readings):
@@ -387,7 +389,7 @@ class GameState:
         # arm_back = arm_right
         # Rotate them and get readings.
         # readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
-        # readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0.0))
+        readings.append(self.get_arm_distance(arm_forward, x, y, angle, math.pi/2))
         # readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
         # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
         # readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
@@ -406,7 +408,6 @@ class GameState:
         # Look at each point and see if we've hit something.
         for point in arm:
             i += 1
-
             # Move the point to the right spot.
             rotated_p = self.get_rotated_point(
                 x, y, point[0], point[1], angle + offset
@@ -419,6 +420,7 @@ class GameState:
                 return i  # Sensor is off the screen.
             else:
                 obs = screen.get_at(rotated_p)
+                print obs
                 if self.get_track_or_not(obs) != 0:
                     return i
 
