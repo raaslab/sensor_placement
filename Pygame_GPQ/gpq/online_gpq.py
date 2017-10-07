@@ -16,9 +16,9 @@ plt.ion()
 
 class gp_prediction():
 	def __init__(self):
-		self.rbf_init_length_scale = np.array([300, 300, 1, 1, 1, 1, 5])
+		self.rbf_init_length_scale = np.array([1, 1, 1, 1, 1, 1, 1, 1, 5])
 		self.kernel = C(1347.0, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 1.0, noise_level_bounds = (1, 10.0)) 	
-		self.gp = GaussianProcessRegressor(kernel=self.kernel, optimizer = None, n_restarts_optimizer=9)
+		self.gp = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=1)
 		self.gamma = 0.9
 	
 	def predict_maxq(self, state):	
@@ -49,20 +49,20 @@ if __name__ == "__main__":
 	num_of_steps = 1
 	j = 0
 	actions = range(0, 4)
-	condition_number = 1000
+	condition_number = 100
 	gamma = 0.9
 	epsilon = 0.1
 	game_obj = gameEngine.GameState()
 	gp_obj = gp_prediction()
 	sum_of_reward_per_epoch = 0
-	curr_state = [250, 250, 10, 10, 10, 10]
+	curr_state = [10, 10, 10, 10, 10, 10, 10, 10]
 	curr_state = np.array(curr_state)
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	sum_of_reward_per_epoch = 0
 	plot_reward_ = []
 	f = open("reward.txt","w+")
 	# g = open("condition_10_comp_time.txt","w+")
-	while  num_of_steps <= 1000:
+	while True:
 		# print num_of_steps
 		if num_of_steps != 1:
 			randomNumber = random.random()
@@ -73,24 +73,27 @@ if __name__ == "__main__":
 		elif num_of_steps == 1:
 			action = random.randint(0, 3)
 		curr_reward, next_state = game_obj.frame_step(action)
+		game_obj.frame_step(action)
 		# start_comp_time = time.time()
 		# Add reward+gamma*max(Q) as target value for current transition
 
 		if 1 not in curr_state.tolist():
-			newRecord = curr_state.tolist() + [(action - 1) * math.pi/2] + [curr_reward + 0 * round(gamma * gp_obj.predict_maxq(next_state), 2)]	
+			newRecord = curr_state.tolist() + [(action - 1) * math.pi/2] + [curr_reward + 0.2 * round(gamma * gp_obj.predict_maxq(next_state), 2)]	
 			record.append(newRecord)
-		
+		else:
+			print 'num_ofsteps is %d' % num_of_steps 
+			num_of_steps = 0
+
 		input_ = [item[:-1] for item in record]
 		output_ = [item[-1] for item in record]
 		# Instance of self.fit function
 		instance = gp_obj.gp.fit(input_, output_)
-		# eig_values = np.linalg.eig(instance.K)[0]
+		eig_values = np.linalg.eig(instance.K)[0]
 		# print np.exp(instance.kernel_.theta)
 		# g.write("%s\n" % (time.time() - start_comp_time))
 		# Check the condition number of the matrix
-		# if np.max(eig_values)/np.min(eig_values) > condition_number:
-		# 	record = record
-		# print len(record)
+		if np.max(eig_values)/np.min(eig_values) > condition_number:
+			record = record
 		# Go to next state
 		curr_state = next_state[0]
 		sum_of_reward_per_epoch += curr_reward
