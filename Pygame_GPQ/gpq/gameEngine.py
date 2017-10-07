@@ -152,8 +152,8 @@ class GameState:
 
         #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
-        self.obstacles.append(self.create_circular_obstacle(500,800,100))
-        self.obstacles.append(self.create_circular_obstacle(750,260,5))
+        # self.obstacles.append(self.create_circular_obstacle(500,800,100))
+        self.obstacles.append(self.create_circular_obstacle(1050, 650, 5))
 
 
         # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
@@ -309,7 +309,7 @@ class GameState:
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = int(self.sum_readings(readings)) + 5000/(abs(x - 750)+ 0.001) 
+            reward = int(self.sum_readings(readings)) + 5000000/(abs(x - 1050) + abs(y - 650) + .0001) 
             #reward = 1
         self.num_steps += 1
         return reward, state
@@ -460,7 +460,7 @@ if __name__ == "__main__":
     prev_state = [[2, 2, 2, 2]]
     while True:
         currReward, state = game_state.frame_step((random.randint(0, 3)))
-        time.sleep(0.25)
+        # time.sleep(0.25)
         print "prev State"
         print prev_state
         print "current_state:"
