@@ -23,7 +23,6 @@ screen.set_alpha(None)
 show_sensors = True
 draw_screen = True
 
-
 class GameState:
     def __init__(self):
         # Global-ish.
@@ -125,35 +124,35 @@ class GameState:
 
     def env3(self):
         self.obstacles = []
-        # self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
-        # self.obstacles.append(self.create_obstacle(50,200,1000,200,10))
+        self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
+        self.obstacles.append(self.create_obstacle(50,200,1000,200,10))
 
-        # self.obstacles.append(self.create_obstacle(50,200,50,400,10))
-        # self.obstacles.append(self.create_obstacle(0,400,50,400,10))
+        self.obstacles.append(self.create_obstacle(50,200,50,400,10))
+        self.obstacles.append(self.create_obstacle(0,400,50,400,10))
 
-        # self.obstacles.append(self.create_obstacle(1000,50,1400,400,10)) 
-        # self.obstacles.append(self.create_obstacle(1000,200,1200,375,10)) 
+        self.obstacles.append(self.create_obstacle(1000,50,1400,400,10)) 
+        self.obstacles.append(self.create_obstacle(1000,200,1200,375,10)) 
 
-        # # self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
-        # # self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
+        self.obstacles.append(self.create_obstacle(1400,400,1400,800,10)) 
+        self.obstacles.append(self.create_obstacle(1200,375,1200,700,10)) 
 
-        # # self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
-        # # self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
+        self.obstacles.append(self.create_obstacle(1400,800,800,800,10)) 
+        self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
 
-        # self.obstacles.append(self.create_obstacle(800,800,800,500,10))
+        self.obstacles.append(self.create_obstacle(800,800,800,500,10))
 
-        # self.obstacles.append(self.create_obstacle(800,400,300,400,10))
+        self.obstacles.append(self.create_obstacle(800,400,300,400,10))
 
-        # self.obstacles.append(self.create_obstacle(800,500,600,500,10))
+        self.obstacles.append(self.create_obstacle(800,650,100,650,10))
         # self.obstacles.append(self.create_obstacle(400,500,300,500,10))
 
         # self.obstacles.append(self.create_obstacle(400,500,400,800,10))
         # self.obstacles.append(self.create_obstacle(600,500,600,800,10))
 
-        #self.obstacles.append(self.create_obstacle(400,900,600,900,10))
+        # self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
         # self.obstacles.append(self.create_circular_obstacle(500,800,100))
-        # self.obstacles.append(self.create_circular_obstacle(1050, 650, 5))
+        self.obstacles.append(self.create_circular_obstacle(450, 400, 5))
 
 
         # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
@@ -245,7 +244,7 @@ class GameState:
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
         self.car_body = pymunk.Body(1, inertia)
         self.car_body.position = x, y
-        self.car_shape = pymunk.Circle(self.car_body, 5)
+        self.car_shape = pymunk.Circle(self.car_body, 10)
         self.car_shape.color = THECOLORS["green"]
         self.car_shape.elasticity = 0.0
         self.car_body.angle = r
@@ -282,7 +281,11 @@ class GameState:
         self.car_body.angle = 0
         #self.car_body.velocity = 100 * driving_direction
         self.car_body.velocity = self.car_velocity * driving_direction
-        # Update the screen and stuff.
+        
+        # Get the current location and the readings there.
+        x, y = self.car_body.position
+        
+        # Update the screen and stuff.  
         screen.fill(THECOLORS["black"])
         # pymunk.pygame_util.draw(screen, self.space)
         options = pymunk.pygame_util.DrawOptions(screen)
@@ -293,28 +296,28 @@ class GameState:
             pygame.display.flip()
         clock.tick()
 
-        # Get the current location and the readings there.
-        x, y = self.car_body.position
-        readings = self.get_sonar_readings(x, y, self.car_body.angle)
         
+        readings = self.get_sonar_readings(x, y, self.car_body.angle)
         # print readings
+        
         state = np.array( [[x] + [y] + readings])
 
         # Set the reward.
         # Car crashed when any reading == 1
         if self.car_is_crashed(readings):
             self.crashed = True
+            print 'crashed'
             #reward = -500
-            reward = -50
+            reward = -500
             self.recover_from_crash(driving_direction)
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = int(self.sum_readings(readings)) + 5000000/(abs(x - 1050) + abs(y - 650) + .0001) 
+            reward = int(0 * self.sum_readings(readings))  
             #reward = 1
         self.num_steps += 1
 
-        return reward, state
+        return reward + 500/(abs(x - 950) + abs(y - 600) + .0001), state
 
     '''
     def move_obstacles(self):
@@ -335,7 +338,7 @@ class GameState:
         self.cat_body.velocity = speed * direction
     '''
     def car_is_crashed(self, readings):
-        if readings[0] == 1: #or readings[1] == 1 or readings[2] == 1:# or readings[3] == 1 #or readings[4] == 1 or readings[5] == 1:
+        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1 or readings[3] == 1: #or readings[4] == 1 or readings[5] == 1:
             return True
         else:
             return False
@@ -351,16 +354,16 @@ class GameState:
             self.car_body.position = 250, 250
             self.crashed = False
             
-            for i in range(10):
-                #self.car_body.angle += .2  # Turn a little.
-                screen.fill(THECOLORS["red"])  # Red is scary!
-                #draw(screen, self.space)
-                options = pymunk.pygame_util.DrawOptions(screen)
-                self.space.debug_draw(options)
-                self.space.step(1./10)
-                #if draw_screen:
-                   #pygame.display.flip()
-                clock.tick()
+            # for i in range(10):
+            #     #self.car_body.angle += .2  # Turn a little.
+            #     screen.fill(THECOLORS["red"])  # Red is scary!
+            #     #draw(screen, self.space)
+            #     options = pymunk.pygame_util.DrawOptions(screen)
+            #     self.space.debug_draw(options)
+            #     self.space.step(1./10)
+            #     #if draw_screen:
+            #        #pygame.display.flip()
+            #     clock.tick()
             
 
     def sum_readings(self, readings):
@@ -380,22 +383,22 @@ class GameState:
         in a sonar "arm" is non-zero, then that arm returns a distance of 5.
         """
         # Make our arms.
-        # arm_left = self.make_sonar_arm(x, y)
+        arm_left = self.make_sonar_arm(x, y)
         arm_forward = self.make_sonar_arm(x, y)
         #arm_middle2 = arm_middle1
         #arm_middle3 = arm_middle2
         #arm_middle4 = arm_middle3
-        # arm_right = arm_forward
-        # arm_back = arm_right
+        arm_right = arm_forward
+        arm_back = arm_right
         # Rotate them and get readings.
-        # readings.append(self.get_arm_distance(arm_left, x, y, angle, -math.pi/3))
-        readings.append(self.get_arm_distance(arm_forward, x, y, angle, math.pi/2))
+        
+        readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0))
+        readings.append(self.get_arm_distance(arm_left, x, y, angle, math.pi/2))
         # readings.append(self.get_arm_distance(arm_right, x, y, angle, math.pi/3))
-        # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
+        readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
         # readings.append(self.get_arm_distance(arm_middle3, x, y, angle, -0.25))
         # readings.append(self.get_arm_distance(arm_middle4, x, y, angle, -0.5))
-        # readings.append(self.get_arm_distance(arm_right, x, y, angle, -1.0))
-
+        readings.append(self.get_arm_distance(arm_right, x, y, angle, -math.pi/2))
         if show_sensors:
             pygame.display.update()
 
@@ -420,12 +423,11 @@ class GameState:
                 return i  # Sensor is off the screen.
             else:
                 obs = screen.get_at(rotated_p)
-                print obs
-                if self.get_track_or_not(obs) != 0:
+                if obs == THECOLORS['white']:
                     return i
 
             if show_sensors:
-                pygame.draw.circle(screen, (255, 255, 255), (rotated_p), 2)
+                pygame.draw.circle(screen, (254, 254, 254), (rotated_p), 2)
 
         # Return the distance for the arm.
         return i
