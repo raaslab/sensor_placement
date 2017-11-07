@@ -22,8 +22,6 @@ screenB = pygame.display.set_mode((500,480), 0, 32)
 screenA.blit(background, (0,0))
 screenB.blit(player, (100,100))
 
-
-time.sleep(30)
 # Turn off alpha since we don't use it.
 screen.set_alpha(None)
 
