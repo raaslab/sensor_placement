@@ -212,7 +212,7 @@ class GameState:
         # # # self.obstacles.append(self.create_obstacle(200,200,1400,200,10))
         # # self.obstacles.append(self.create_obstacle(300,300,1300,300,10))
 
-        self.obstacles.append(self.create_circular_obstacle(50, 750, 20))
+        self.obstacles.append(self.create_circular_obstacle(50, 750, 10))
 
         self.obstacles.append(self.create_obstacle(200,10,200,200,5))
         self.obstacles.append(self.create_obstacle(200,300,200,600,5))
@@ -231,6 +231,17 @@ class GameState:
         self.obstacles.append(self.create_obstacle(1400,300,1400,600,5))     
         self.obstacles.append(self.create_obstacle(1400,700,1400,1000,5))
 
+    def env6(self):
+        self.obstacles = []
+        # self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
+
+        # # # self.obstacles.append(self.create_obstacle(200,200,1400,200,10))
+        # # self.obstacles.append(self.create_obstacle(300,300,1300,300,10))
+
+        self.obstacles.append(self.create_circular_obstacle(50, 750, 10))
+
+        
+        self.obstacles.append(self.create_obstacle(400,300,400,600,40))
         
 
 
@@ -363,7 +374,7 @@ class GameState:
             print 'bumped into wall'
             #reward = -500
             # reward = - 0.01 * (abs(x - 50) - 0.01 * abs(y - 750)) + int(self.sum_readings(readings)/4)
-            reward = - math.sqrt(abs(x - 50)**2 + abs(y - 750)**2) + int(self.sum_readings(readings)) - 100
+            reward = - math.sqrt(abs(x - 50)**2 + abs(y - 750)**2) + 5 * int(self.sum_readings(readings)) - 2000
             x, y = 750, 250
             self.car_body.position = x, y
             self.car_body.angle = 0
@@ -375,7 +386,7 @@ class GameState:
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward =  - math.sqrt((x - 50)**2 + (y - 750)**2) + int(self.sum_readings(readings)) 
+            reward =  - math.sqrt((x - 50)**2 + (y - 750)**2) + 5 * int(self.sum_readings(readings)) 
             #reward = 1
         self.num_steps += 1
 

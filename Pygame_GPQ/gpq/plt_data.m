@@ -1,11 +1,23 @@
-val = load('learned.txt');
+subplot(2,1,1)
+val = load('learned_mean.txt');
 x = reshape(val(:, 1), [20 26]);
 y =  reshape(val(:, 2), [20 26]);
 value =  reshape(val(:, 3), [20 26]);
 surf(x, y, value)
 view(2);
 colorbar;
-title('Value Function')
+title('Value Function Mean')
+
+subplot(2,1,2)
+val = load('learned_var.txt');
+x = reshape(val(:, 1), [20 26]);
+y =  reshape(val(:, 2), [20 26]);
+value =  reshape(val(:, 3), [20 26]);
+surf(x, y, value)
+view(2);
+colorbar;
+title('Variance')
+
 % clear all;
 % close all;
 
