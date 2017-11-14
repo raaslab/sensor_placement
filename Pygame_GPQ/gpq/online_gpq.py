@@ -16,7 +16,7 @@ plt.ion()
 
 class gp_prediction():
 	def __init__(self):
-		self.rbf_init_length_scale = np.array([1, 1, 1, 1, 1, 1, 1, 1, 5])
+		self.rbf_init_length_scale = np.array([1, 1, 1, 1, 5])
 		self.kernel = C(134.0, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 1.0, noise_level_bounds = (1, 10.0)) 	
 		self.gp = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=9)
 		self.gamma = 0.9
@@ -67,10 +67,10 @@ if __name__ == "__main__":
 	action = random.randint(-9, 9)
 	curr_reward, curr_state = game_obj.frame_step(action)
 	curr_state = curr_state[0]
-	for epoch in range(0, 10):
+	for epoch in range(1, 11):
 		num_of_steps = 1
 		print 'epoch' + '\t' + str(epoch)
-		while num_of_steps <= 100:
+		while num_of_steps <= 200:
 			if num_of_steps != 1:
 				randomNumber = random.random()
 				if randomNumber >= epsilon:
@@ -94,20 +94,20 @@ if __name__ == "__main__":
 
 			
 			# newRecord = curr_state.tolist() + [action * math.pi/18] + [curr_reward +  round(gamma * gp_obj.predict_maxq(next_state), 2)]
-			
+		# print record_updated	
 		input_ = [item[:-1] for item in record_updated]
 		output_ = [item[-1] for item in record_updated]
 
-
 		instance = gp_obj.gp.fit(input_, output_)	
 		
+		print np.exp(instance.kernel_.theta)
 			# if num_of_steps % 80 == 0:
 			# 	hyperparam = np.concatenate((hyperparam , [np.exp(gp_obj.gp.fit(input_, output_).kernel_.theta)]), axis=0)
 			# 	np.savetxt('hyperparam.txt', hyperparam, fmt='%.4f',)
 			# Instance of self.fit function
 			# instance = gp_obj.gp.fit(input_, output_)
-		eig_values = np.linalg.eig(instance.observ)[0]
-		print np.sort(eig_values)/np.sum(eig_values)	
+		# eig_values = np.linalg.eig(instance.observ)[0]
+		# print np.sort(eig_values)/np.sum(eig_values)	
 			# g.write("%s\n" % (time.time() - start_comp_time))
 			# Check the condition number of the matrix
 			# if np.max(eig_values)/np.min(eig_values) > condition_number:
@@ -132,11 +132,11 @@ if __name__ == "__main__":
 # print instance
 
 
-	for statex in range(0, 1300, 50):
-		for statey in range(0, 1000, 50):
+	for statex in range(1, 10):
+		for statey in range(1, 10):
 			all_actions = []
 			for action in range(-9, 10):
-				test_input = [statex, statey] + [1, 0] + [5, 5, 5, 5] + [action * math.pi/18]
+				test_input = [statex, statey, 8, 8] + [action * math.pi/18]
 				all_actions.append(test_input)
 			all_actions = np.array(all_actions)
 			q_pred, q_pred_var = gp_obj.gp.predict(all_actions, return_std = True, return_cov=False) 		

@@ -70,7 +70,7 @@ class GameState:
             s.collision_type = 1
             s.color = THECOLORS['white']
         self.space.add(static)
-        self.env5()
+        self.env3()
 
         # Create a moving cat
         #self.create_cat()
@@ -131,10 +131,10 @@ class GameState:
 
     def env3(self):
         self.obstacles = []
-        # self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
+        self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
 
-        # # # self.obstacles.append(self.create_obstacle(200,200,1400,200,10))
-        # # self.obstacles.append(self.create_obstacle(300,300,1300,300,10))
+        self.obstacles.append(self.create_obstacle(200,200,1400,200,10))
+        self.obstacles.append(self.create_obstacle(300,300,1300,300,10))
 
         self.obstacles.append(self.create_obstacle(200,10,200,200,10))
         self.obstacles.append(self.create_obstacle(200,300,200,600,10))
@@ -169,11 +169,11 @@ class GameState:
         self.obstacles.append(self.create_circular_obstacle(50, 750, 5))
 
 
-        # self.obstacles.append(self.create_obstacle(300,500,300,600,10))
-        # self.obstacles.append(self.create_obstacle(300,400,300,300,10))
+        self.obstacles.append(self.create_obstacle(300,500,300,600,10))
+        self.obstacles.append(self.create_obstacle(300,400,300,300,10))
 
-        # self.obstacles.append(self.create_obstacle(300,300,100,450,10))
-        # self.obstacles.append(self.create_obstacle(300,600,100,450,10))
+        self.obstacles.append(self.create_obstacle(300,300,100,450,10))
+        self.obstacles.append(self.create_obstacle(300,600,100,450,10))
 
     def env4(self):
         self.obstacles = []
@@ -365,7 +365,7 @@ class GameState:
 
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
         
-        state = np.array( [[x] + [y] + list(driving_direction) + readings])
+        state = np.array( [readings])
 
         # Set the reward.
         # Car crashed when any reading == 1
@@ -374,19 +374,19 @@ class GameState:
             print 'bumped into wall'
             #reward = -500
             # reward = - 0.01 * (abs(x - 50) - 0.01 * abs(y - 750)) + int(self.sum_readings(readings)/4)
-            reward = - math.sqrt(abs(x - 50)**2 + abs(y - 750)**2) + 5 * int(self.sum_readings(readings)) - 2000
+            reward = 5 * int(self.sum_readings(readings)) - 200
             x, y = 750, 250
             self.car_body.position = x, y
             self.car_body.angle = 0
             #readings = self.get_sonar_readings(x, y, self.car_body.angle)
             readings = [5, 10, 10, 10]
-            state = np.array( [[x] + [y] + list(Vec2d(1, 0).rotated(self.car_body.angle)) + readings])
+            state = np.array( [readings])
             # self.recover_from_crash(driving_direction)
             self.crashed = False
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward =  - math.sqrt((x - 50)**2 + (y - 750)**2) + 5 * int(self.sum_readings(readings)) 
+            reward = 5 * int(self.sum_readings(readings)) 
             #reward = 1
         self.num_steps += 1
 

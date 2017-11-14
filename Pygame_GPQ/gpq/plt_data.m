@@ -1,8 +1,11 @@
+reshape_x = 9;
+reshape_y = 9;
+
 subplot(2,1,1)
 val = load('learned_mean.txt');
-x = reshape(val(:, 1), [20 26]);
-y =  reshape(val(:, 2), [20 26]);
-value =  reshape(val(:, 3), [20 26]);
+x = reshape(val(:, 1), [reshape_x reshape_y]);
+y =  reshape(val(:, 2), [reshape_x reshape_y]);
+value =  reshape(val(:, 3), [reshape_x reshape_y]);
 surf(x, y, value)
 view(2);
 colorbar;
@@ -10,9 +13,9 @@ title('Value Function Mean')
 
 subplot(2,1,2)
 val = load('learned_var.txt');
-x = reshape(val(:, 1), [20 26]);
-y =  reshape(val(:, 2), [20 26]);
-value =  reshape(val(:, 3), [20 26]);
+x = reshape(val(:, 1), [reshape_x reshape_y]);
+y =  reshape(val(:, 2), [reshape_x reshape_y]);
+value =  reshape(val(:, 3), [reshape_x reshape_y]);
 surf(x, y, value)
 view(2);
 colorbar;
