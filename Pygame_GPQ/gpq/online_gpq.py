@@ -16,9 +16,9 @@ plt.ion()
 
 class gp_prediction():
 	def __init__(self):
-		self.rbf_init_length_scale = np.array([1, 1, 1, 1, 5])
-		self.kernel = C(134.0, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 1.0, noise_level_bounds = (1, 10.0)) 	
-		self.gp = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=9)
+		self.rbf_init_length_scale = np.array([5.50, 8.50, 3.50, 8.50, 8.50, 3.0, 5.0, 1.10])
+		self.kernel = C(22000, (1e-3, 1e8)) * RBF(self.rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 35.0, noise_level_bounds = (1, 1000.0)) 	
+		self.gp = GaussianProcessRegressor(kernel=self.kernel, optimizer = None, n_restarts_optimizer=9)
 		self.gamma = 0.9
 	
 	def predict_maxq(self, state):	
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 	j = 0
 	actions = range(-9, 10)
 	condition_number = 100
-	gamma = 0.9
+	gamma = 0.1
 	epsilon = 0.10
 	game_obj = gameEngine.GameState()
 	gp_obj = gp_prediction()
@@ -62,14 +62,15 @@ if __name__ == "__main__":
 	f = open("learned_mean.txt","w+")
 	g = open("learned_var.txt","w+")
 	# g = open("condition_10_comp_time.txt","w+")
-	hyperparam = np.zeros((1, 11))
+	hyperparam = np.zeros((1, 10))
 	
 	action = random.randint(-9, 9)
 	curr_reward, curr_state = game_obj.frame_step(action)
 	curr_state = curr_state[0]
-	for epoch in range(1, 11):
+	for epoch in range(0, 20):
+		epoch_reward = 0
 		num_of_steps = 1
-		print 'epoch' + '\t' + str(epoch)
+		print 'epoch' + '\t'+ str(epoch)
 		while num_of_steps <= 200:
 			if num_of_steps != 1:
 				randomNumber = random.random()
@@ -84,30 +85,32 @@ if __name__ == "__main__":
 			record.append(newRecord)
 			curr_state = next_state[0]
 			num_of_steps += 1
+			epoch_reward += curr_reward
 
 		record_updated = []
-		for item in record:
-			y = item[3] + gamma * gp_obj.predict_maxq(item[2])
-			record_updated.append(item[0] + [item[1]] + [y])	
+		print 'reward' + str(epoch_reward)
+
+		if epoch < 4:
+			for item in record:
+				y = item[3] + gamma * gp_obj.predict_maxq(item[2])
+				record_updated.append(item[0] + [item[1]] + [y])	
 			# start_comp_time = time.time()
 			# Add reward+gamma*max(Q) as target value for current transition	
 
 			
 			# newRecord = curr_state.tolist() + [action * math.pi/18] + [curr_reward +  round(gamma * gp_obj.predict_maxq(next_state), 2)]
-		# print record_updated	
-		input_ = [item[:-1] for item in record_updated]
-		output_ = [item[-1] for item in record_updated]
+			
+			input_ = [item[:-1] for item in record_updated]
+			output_ = [item[-1] for item in record_updated]
 
-		instance = gp_obj.gp.fit(input_, output_)	
 		
-		print np.exp(instance.kernel_.theta)
+			instance = gp_obj.gp.fit(input_, output_)	
 			# if num_of_steps % 80 == 0:
-			# 	hyperparam = np.concatenate((hyperparam , [np.exp(gp_obj.gp.fit(input_, output_).kernel_.theta)]), axis=0)
-			# 	np.savetxt('hyperparam.txt', hyperparam, fmt='%.4f',)
+			hyperparam = np.concatenate((hyperparam , [np.exp(instance.kernel_.theta)]), axis=0)
+			np.savetxt('hyperparam.txt', hyperparam, fmt='%.4f',)
 			# Instance of self.fit function
 			# instance = gp_obj.gp.fit(input_, output_)
 		# eig_values = np.linalg.eig(instance.observ)[0]
-		# print np.sort(eig_values)/np.sum(eig_values)	
 			# g.write("%s\n" % (time.time() - start_comp_time))
 			# Check the condition number of the matrix
 			# if np.max(eig_values)/np.min(eig_values) > condition_number:
@@ -132,11 +135,11 @@ if __name__ == "__main__":
 # print instance
 
 
-	for statex in range(1, 10):
-		for statey in range(1, 10):
+	for statex in range(0, 11):
+		for statey in range(0, 11):
 			all_actions = []
 			for action in range(-9, 10):
-				test_input = [statex, statey, 8, 8] + [action * math.pi/18]
+				test_input = [statex, statey, 5, 5] + [action * math.pi/18]
 				all_actions.append(test_input)
 			all_actions = np.array(all_actions)
 			q_pred, q_pred_var = gp_obj.gp.predict(all_actions, return_std = True, return_cov=False) 		

@@ -133,9 +133,9 @@ class GameState:
         self.obstacles = []
         self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
 
-        self.obstacles.append(self.create_obstacle(200,200,1400,200,10))
-        self.obstacles.append(self.create_obstacle(300,300,1300,300,10))
-
+        self.obstacles.append(self.create_obstacle(200,200,1200,200,10))
+        self.obstacles.append(self.create_obstacle(300,300,1200,300,10))
+        self.obstacles.append(self.create_obstacle(900,100,900,300,10))
         self.obstacles.append(self.create_obstacle(200,10,200,200,10))
         self.obstacles.append(self.create_obstacle(200,300,200,600,10))
      
@@ -153,7 +153,7 @@ class GameState:
         self.obstacles.append(self.create_obstacle(1400,800,800,800,5)) 
         self.obstacles.append(self.create_obstacle(1200,700,800,400,10)) 
 
-        # self.obstacles.append(self.create_obstacle(800,800,800,500,10))
+        self.obstacles.append(self.create_obstacle(800,800,800,500,10))
 
         self.obstacles.append(self.create_obstacle(800,400,500,400,5))
 
@@ -365,7 +365,7 @@ class GameState:
 
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
         
-        state = np.array( [readings])
+        state = np.array([readings])
 
         # Set the reward.
         # Car crashed when any reading == 1
@@ -374,19 +374,19 @@ class GameState:
             print 'bumped into wall'
             #reward = -500
             # reward = - 0.01 * (abs(x - 50) - 0.01 * abs(y - 750)) + int(self.sum_readings(readings)/4)
-            reward = 5 * int(self.sum_readings(readings)) - 200
+            reward = 5 * int(self.sum_readings(readings)) - 50 
             x, y = 750, 250
             self.car_body.position = x, y
             self.car_body.angle = 0
             #readings = self.get_sonar_readings(x, y, self.car_body.angle)
-            readings = [5, 10, 10, 10]
+            readings = [5, 10, 10, 10, 5, 5, 5]
             state = np.array( [readings])
             # self.recover_from_crash(driving_direction)
             self.crashed = False
         else:
             # Higher readings are better, so return the sum.
             #reward = -5 + int(self.sum_readings(readings) / 10)
-            reward = 5 * int(self.sum_readings(readings)) 
+            reward =  5 * int(self.sum_readings(readings)) 
             #reward = 1
         self.num_steps += 1
 
@@ -411,7 +411,7 @@ class GameState:
         self.cat_body.velocity = speed * direction
     '''
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1 or readings[3] == 1: # or readings[4] == 1 or readings[5] == 1 or readings[6] == 1 or readings[7] == 1:
+        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1 or readings[3] == 1 or readings[4] == 1 or readings[5] == 1 or readings[6] == 1: #or readings[7] == 1:
             return True
         else:
             return False
@@ -458,7 +458,10 @@ class GameState:
         # Make our arms.
         arm_left = self.make_sonar_arm(x, y)
         # arm_forward = self.make_sonar_arm(x, y)
+        arm_right1 = arm_left
+        arm_left1 = arm_left
         arm_middle1 = arm_left
+        arm_middle = arm_left
         arm_middle2 = arm_middle1
         # arm_middle3 = arm_middle2
         # arm_middle4 = arm_middle3
@@ -468,8 +471,11 @@ class GameState:
         
         # readings.append(self.get_arm_distance(arm_forward, x, y, angle, 0))
         readings.append(self.get_arm_distance(arm_right, x, y, angle, -3 * math.pi/8))
+        readings.append(self.get_arm_distance(arm_right1, x, y, angle, -2 * math.pi/8))
         readings.append(self.get_arm_distance(arm_middle1, x, y, angle, -1 * math.pi/8))
+        readings.append(self.get_arm_distance(arm_middle1, x, y, angle, 0 * math.pi/8))
         readings.append(self.get_arm_distance(arm_middle2, x, y, angle, 1 * math.pi/8))
+        readings.append(self.get_arm_distance(arm_left1, x, y, angle, 2 * math.pi/8))
         readings.append(self.get_arm_distance(arm_left, x, y, angle, 3 * math.pi/8))
         # readings.append(self.get_arm_distance(arm_back, x, y, angle, math.pi))
         # readings.append(self.get_arm_distance(arm_middle3, x, y, angle, 5 * math.pi/4))
