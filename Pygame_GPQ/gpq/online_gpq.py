@@ -88,7 +88,7 @@ if __name__ == "__main__":
 			epoch_reward += curr_reward
 
 		record_updated = []
-		print 'reward' + str(epoch_reward)
+		print 'reward' + '\t' + str(epoch_reward)
 
 		if epoch < 4:
 			for item in record:
