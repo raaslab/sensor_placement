@@ -35,7 +35,7 @@ class GameState:
         # Global-ish.
         self.crashed = False
         self.car_velocity = 100
-        self.numOflasersData = 10
+        self.numOflasersData = 5
         self.spread = 10
         self.distance = 10
         
@@ -166,7 +166,7 @@ class GameState:
         self.obstacles.append(self.create_obstacle(400,900,600,900,10))
 
         self.obstacles.append(self.create_circular_obstacle(500,800,100))
-        self.obstacles.append(self.create_circular_obstacle(50, 750, 5))
+        # self.obstacles.append(self.create_circular_obstacle(50, 750, 5))
 
 
         self.obstacles.append(self.create_obstacle(300,500,300,600,10))

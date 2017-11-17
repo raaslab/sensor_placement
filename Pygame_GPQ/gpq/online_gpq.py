@@ -15,8 +15,8 @@ record = []
 plt.ion()
 
 
-rbf_init_length_scale = np.array([5.50, 8.50, 3.50, 8.50, 8.50, 3.0, 5.0, 1.10])
-kernel = C(22000, (1e-3, 1e8)) * RBF(rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 35.0, noise_level_bounds = (1, 1000.0)) 	
+rbf_init_length_scale = np.array([2.1, 5.1, 14.0, 6.2, 15.0, 2.0, 2.0, 1.0])
+kernel = C(10557, (1e-3, 1e8)) * RBF(rbf_init_length_scale, (1e-3, 1e3)) + WhiteKernel(noise_level = 20.0, noise_level_bounds = (1, 1000.0)) 	
 gp = GaussianProcessRegressor(kernel = kernel, optimizer = None, n_restarts_optimizer=9)
 gamma = 0.1
 
@@ -58,11 +58,11 @@ hyperparam = np.zeros((1, 10))
 action = random.randint(-9, 9)
 curr_reward, curr_state = game_obj.frame_step(action)
 curr_state = curr_state[0]
-for epoch in range(1, 100):
+for epoch in range(1, 2000):
 	epoch_reward = 0
 	num_of_steps = 1
 	print 'epoch' + '\t'+ str(epoch)
-	while num_of_steps <= 200:
+	while num_of_steps <= 10:
 		if num_of_steps != 1:
 			randomNumber = random.random()
 			if randomNumber >= epsilon:
@@ -78,7 +78,7 @@ for epoch in range(1, 100):
 		epoch_reward += curr_reward
 	record_updated = []
 	print 'reward' + '\t' + str(epoch_reward)
-	if epoch < 5:
+	if epoch < 40:
 		for item in record:
 			y = item[3] + gamma * predict_maxq(item[2])
 			record_updated.append(item[0] + [item[1]] + [y])	
