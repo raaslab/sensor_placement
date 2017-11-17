@@ -355,7 +355,7 @@ class GameState:
         
 
         x, y = self.car_body.position
-
+        print x, y
         if draw_screen:
             pygame.display.flip()
         clock.tick()

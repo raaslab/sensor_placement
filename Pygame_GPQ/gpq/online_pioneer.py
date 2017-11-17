@@ -71,23 +71,22 @@ pioneer0_vel_ang = 0.0 # [rad/s]
 pioneer0_pub = rospy.Publisher(pioneer0_cmd_vel, Twist, queue_size = 2)
 actions = range(-9, 10)
 
+list_var = deque([], maxlen = 5)
+game_obj = gameEngine.GameState()
 
-while total_switch <= 50000	:
-	
+
+while total_switch <= 50000	:	
 	### THIS CODE IS FOR SAMPLE GATHERING IN PYGAME ###
-	
 	epsilon = 0.1
 	# sum_of_reward_per_epoch = 0
 	# timestr = time.strftime("%Y%m%d-%H%M%S")
 	# sum_of_reward_per_epoch = 0
 	# plot_reward_ = []
-	# hyperparam = np.zeros((1, 10))
-	game_obj = gameEngine.GameState()	
+	# hyperparam = np.zeros((1, 10))	
 	action = random.randint(-9, 9)
 	curr_reward, curr_state = game_obj.frame_step(action)
 	curr_state = curr_state[0]	
-
-	list_var = deque([], maxlen = 5)	
+	
 	num_of_steps = 1
 	while num_of_steps <= 10000:
 		
@@ -100,8 +99,7 @@ while total_switch <= 50000	:
 			action = random.randint(-9, 9)	
 			q_pred, var = gp.predict(np.array([curr_state.tolist() + [action*math.pi/18]]), return_std = True)	
 			list_var.append(var[0])	
-		
-		print list_var
+			
 		if sum(list_var) <= 60 : 
 			print 'Control Shifting to Pioneer'
 			total_switch += 1
@@ -135,30 +133,32 @@ while total_switch <= 50000	:
 
 	### THIS CODE IS FOR SAMPLE GATHERING IN REAL WORLD ###
 	next_state_laser_data = list(rospy.wait_for_message('/scan', LaserScan).ranges)
-			
+	
+	next_state_laser_data = [round(rounded) for rounded in next_state_laser_data]		
 	# Replace inf readings with maximum range of laser
 	for index in range(0, len(next_state_laser_data)): 
 		if next_state_laser_data[index] == float('inf') or next_state_laser_data[index] == float('nan'): 
 			next_state_laser_data[index] = 5 	
 	
 	curr_state = np.array(next_state_laser_data)	
+	print curr_state
 	num_of_steps = 1
 	while num_of_steps <= 10000:
 		randomNumber = random.random()
 		if randomNumber >= epsilon:
 			action, var = choose_action(np.array(curr_state)) 
-			print list(var)[action]
 			action = actions[action]
-			if list(var)[action] > 110:
-				print 'Going back to PyGame'
+			# print list(var)[action]
+			if list(var)[action] > 50:
+				print 'Going back to PyGame\n'
 				total_switch += 1
 				break
 		else:
 			action = random.randint(-9, 9) 
 			q_pred, var = gp.predict(np.array([curr_state.tolist() + [action*math.pi/18]]), return_std = True)	
-			print var[0]
-			if var[0] > 110 : 
-				print 'Going back to PyGame'
+			# print var
+			if var[0] > 50 : 
+				print 'Going back to PyGame\n'
 				total_switch += 1
 				break		
 
@@ -172,6 +172,7 @@ while total_switch <= 50000	:
 			pioneer0_pub.publish(Twist(Vector3(pioneer0_vel_lin, 0, 0), Vector3(0, 0, 0)))
 		time.sleep(1)		
 		next_state_laser_data = list(rospy.wait_for_message('/scan', LaserScan).ranges)	
+		next_state_laser_data = [round(rounded) for rounded in next_state_laser_data]
 		# Replace inf readings with maximum range of laser
 		for index in range(0, len(next_state_laser_data)): 
 			if next_state_laser_data[index] == float('inf') or next_state_laser_data[index] == float('nan'): 
