@@ -70,14 +70,17 @@ class GameState:
             s.collision_type = 1
             s.color = THECOLORS['white']
         self.space.add(static)
-        self.env3()
+        # self.env3()
 
         # Create a moving cat
         #self.create_cat()
         '''
         self.create_incentive()
         '''
-        
+    def change_env(self, curr_state):
+        self.env3(curr_state)
+
+
     def env1(self):
 
         a1 = 50
@@ -129,10 +132,16 @@ class GameState:
         self.obstacles.append(self.create_circular_obstacle(250,50 ,20)) 
 
 
-    def env3(self):
+    def env3(self, curr_state):
         self.obstacles = []
-        self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
+        # print [round(rounded) for rounded in list(curr_state)]
+        self.obstacles.append(self.create_circular_obstacle(750,250,2))
+        for i in range(0, len(list(curr_state))):
+            self.obstacles.append(self.create_circular_obstacle(750 + 10 * round(curr_state[i]) * np.cos((i-3)*math.pi/8),\
+             250 + 10 * round(curr_state[i]) * np.sin((i-3)*math.pi/8), 8))
+        
 
+        self.obstacles.append(self.create_obstacle(0,50,1000,50,10))
         self.obstacles.append(self.create_obstacle(200,200,1200,200,10))
         self.obstacles.append(self.create_obstacle(300,300,1200,300,10))
         self.obstacles.append(self.create_obstacle(900,100,900,300,10))
@@ -355,7 +364,6 @@ class GameState:
         
 
         x, y = self.car_body.position
-        print x, y
         if draw_screen:
             pygame.display.flip()
         clock.tick()
@@ -371,7 +379,7 @@ class GameState:
         # Car crashed when any reading == 1
         if self.car_is_crashed(readings):
             self.crashed = True
-            print 'bumped into wall'
+           # print 'bumped into wall'
             #reward = -500
             # reward = - 0.01 * (abs(x - 50) - 0.01 * abs(y - 750)) + int(self.sum_readings(readings)/4)
             reward = 5 * int(self.sum_readings(readings)) - 50 
@@ -379,7 +387,7 @@ class GameState:
             self.car_body.position = x, y
             self.car_body.angle = 0
             #readings = self.get_sonar_readings(x, y, self.car_body.angle)
-            readings = [5, 10, 10, 10, 5, 5, 5]
+            readings = [5, 5, 5, 5, 5, 5, 5]
             state = np.array( [readings])
             # self.recover_from_crash(driving_direction)
             self.crashed = False
