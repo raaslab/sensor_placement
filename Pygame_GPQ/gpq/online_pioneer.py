@@ -150,7 +150,7 @@ while total_switch <= 50000:
 			action, var = choose_action(np.array(curr_state)) 
 			action = actions[action]
 			print list(var)[action]
-			if list(var)[action] > 5:
+			if list(var)[action] > 1000:
 				print 'Going back to PyGame\n'
 				total_switch += 1
 				break
@@ -158,7 +158,7 @@ while total_switch <= 50000:
 			action = random.randint(-9, 9) 
 			q_pred, var = gp.predict(np.array([curr_state.tolist() + [action*math.pi/18]]), return_std = True)	
 			# print var
-			if var[0] > 5: 
+			if var[0] > 1000: 
 				print 'Going back to PyGame\n'
 				total_switch += 1
 				break				
