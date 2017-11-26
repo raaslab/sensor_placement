@@ -1,25 +1,25 @@
-reshape_x = 11;
-reshape_y = 11;
+% reshape_x = 11;
+% reshape_y = 11;
 
-subplot(2,1,1)
-val = load('learned_mean.txt');
-x = reshape(val(:, 1), [reshape_x reshape_y]);
-y =  reshape(val(:, 2), [reshape_x reshape_y]);
-value =  reshape(val(:, 3), [reshape_x reshape_y]);
-surf(x, y, value)
-view(2);
-colorbar;
-title('Value Function Mean')
+% subplot(2,1,1)
+% val = load('learned_mean.txt');
+% x = reshape(val(:, 1), [reshape_x reshape_y]);
+% y =  reshape(val(:, 2), [reshape_x reshape_y]);
+% value =  reshape(val(:, 3), [reshape_x reshape_y]);
+% surf(x, y, value)
+% view(2);
+% colorbar;
+% title('Value Function Mean')
 
-subplot(2,1,2)
-val = load('learned_var.txt');
-x = reshape(val(:, 1), [reshape_x reshape_y]);
-y =  reshape(val(:, 2), [reshape_x reshape_y]);
-value =  reshape(val(:, 3), [reshape_x reshape_y]);
-surf(x, y, value)
-view(2);
-colorbar;
-title('Variance')
+% subplot(2,1,2)
+% val = load('learned_var.txt');
+% x = reshape(val(:, 1), [reshape_x reshape_y]);
+% y =  reshape(val(:, 2), [reshape_x reshape_y]);
+% value =  reshape(val(:, 3), [reshape_x reshape_y]);
+% surf(x, y, value)
+% view(2);
+% colorbar;
+% title('Variance')
 
 
 % clear all;
@@ -72,3 +72,56 @@ title('Variance')
 % title('Noise variance')
 % xlabel('Number of timesteps')
 % %ylabel('% change with respect to previous timestep')
+
+
+% b = [.175 .26 .322 .321 .34 .325 .37 .425 .44];
+% r = [.07 .19 .225 .225 .25 .27 .295 .365 .35];
+% v = [.07 .09 .13 .155 .155 .175 0.19 .21 .23];
+% y = [.05 .06 .09 .08 .1 .105 .16 .175 .22];
+
+% err = 0.02 * randn(9, 1);
+% errorbar(.1:.05:.5, v, err); 
+% hold on;
+
+% err = 0.02 * randn(9, 1);
+% errorbar(.1:.05:.5, y, err); 
+% hold on;
+
+% err = 0.02 * randn(9, 1);
+% errorbar(.1:.05:.5, r, err);
+% hold on; 
+
+% err = 0.02 * randn(9, 1);
+% errorbar(.1:.05:.5, b, err),
+x = [.5 1.5 1.5 .5]; y = [0 0 100 100]; 
+fill(x, y, 'b')
+hold on;
+
+x = [2.5 3.5 3.5 2.5]; y = [100 100 120 120]; 
+fill(x, y, 'b')
+hold on;
+
+x = [.5 1.5 1.5 .5]; y = [120 120 200 200]; 
+fill(x, y, 'b')
+hold on;
+
+x = [2.5 3.5 3.5 2.5]; y = [200 200 230 230]; 
+fill(x, y, 'b')
+hold on;
+
+x = [.5 1.5 1.5 .5]; y = [230 230 275 275]; 
+fill(x, y, 'b')
+hold on;
+
+x = [2.5 3.5 3.5 2.5]; y = [275 275 300 300]; 
+fill(x, y, 'b')
+hold on;
+
+x = [.5 1.5 1.5 .5]; y = [300 300 320 320]; 
+fill(x, y, 'b')
+hold on;
+
+x = [2.5 3.5 3.5 2.5]; y = [320 320 360 360]; 
+fill(x, y, 'b')
+
+axis([0, 4, 0, inf])
