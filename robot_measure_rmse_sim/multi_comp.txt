@@ -1,0 +1,4 @@
+Comps: 1
+Sensor 1
+[xPos,yPos]: 10 10
+[FoV]: 25
