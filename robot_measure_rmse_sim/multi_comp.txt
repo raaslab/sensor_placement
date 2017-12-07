@@ -1,4 +1,12 @@
-Comps: 1
-Sensor 1
+Comps: 2
+Comp 1
 [xPos,yPos]: 10 10
-[FoV]: 25
+[Cov(1,1),Cov(1,2),Cov(2,1),Cov(2,2)]: 25 0 0 25
+[xPosVar,yPosVar]: 1 1
+[xCovVar,yCovVar]: 0.5 -0.5
+
+Comp 2
+[xPos,yPos]: 30 5
+[Cov(1,1),Cov(1,2),Cov(2,1),Cov(2,2)]: 25 0 0 25
+[xPosVar,yPosVar]: 1 1
+[xCovVar,yCovVar]: 0.5 -0.5
