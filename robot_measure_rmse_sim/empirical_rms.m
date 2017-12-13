@@ -33,18 +33,18 @@ error_prior = [];
 error_post = [];
 
 %Tuned hyper params by using 100 sampling points + [0,0]
-hyp2.cov = [-0.0349, 1.9444];
-hyp2.lik = -45.8462;
+hyp2.cov = [-0.0348 1.9370];
+hyp2.lik = -13.8720;
 
 for subset_size = 1:size(observe_,1)
-	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
+% 	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
 % 	hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, observe(1:subset_size, :), observe_(1:subset_size, :))
 	[mu s2] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, observe(1:subset_size, :), observe_(1:subset_size, :), xs);
 	error_prior = [error_prior; sum(sum(abs(mu - actual).^2))];
 end
 
 for subset_size = 1:size(observe_,1)
-	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
+% 	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
 % 	hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, [observe(1:subset_size, :); 0, 0], [observe_(1:subset_size, :); offset])
 	[mu s2] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, [observe(1:subset_size, :);0, 0], [observe_(1:subset_size, :); offset], xs);
 	error_post = [error_post; sum(sum(abs(mu - actual).^2))];
