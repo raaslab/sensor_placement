@@ -29,6 +29,7 @@ y = x;
 xs = [X(:), Y(:)];
 actual = offset + scaled*xs(:, 1).*exp(-xs(:, 1).^2 - xs(:, 2).^2);
 
+%%
 error_prior = [];
 error_post = [];
 
@@ -40,22 +41,32 @@ for subset_size = 1:size(observe_,1)
 % 	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
 % 	hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, observe(1:subset_size, :), observe_(1:subset_size, :))
 	[mu s2] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, observe(1:subset_size, :), observe_(1:subset_size, :), xs);
-	error_prior = [error_prior; sum(sum(abs(mu - actual).^2))];
+	error_prior = [error_prior; sqrt(mean((mu - actual).^2))]; %RMSE
 end
 
 for subset_size = 1:size(observe_,1)
 % 	hyp = struct('mean', [], 'cov', [0 0], 'lik', -1);
 % 	hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, [observe(1:subset_size, :); 0, 0], [observe_(1:subset_size, :); offset])
 	[mu s2] = gp(hyp2, @infGaussLik, meanfunc, covfunc, likfunc, [observe(1:subset_size, :);0, 0], [observe_(1:subset_size, :); offset], xs);
-	error_post = [error_post; sum(sum(abs(mu - actual).^2))];
+	error_post = [error_post; sqrt(mean((mu - actual).^2))]; %RMSE
 end
 
 %Submodularity
 figure(1)
-plot(1:size(observe_,1),error_post-error_prior,'r');
+plot(1:size(observe_,1),error_post-error_prior,'r','LineWidth', 1.5);
+set(gcf,'color','w');
+box on;
+title('Marginal gain in expected RMSE for different sample size');
+xlabel('sample size');
+ylabel('marginal gain in expected RMSE');
 
 figure(2)
-plot(error_post)
+plot(error_post, 'b','LineWidth', 1.5);
+set(gcf,'color','w');
+box on;
+title('Monotonicity of expected RMSE');
+xlabel('sample size');
+ylabel('expected RMSE');
 
 
 % mu = reshape(mu, size(X));
