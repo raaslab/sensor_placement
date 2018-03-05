@@ -1,3 +1,4 @@
 ros_ws/build/
 ros_ws/devel/
 ros_ws/src/spatiotemporal_estimation/data/
+robot_measure_rmse_sim/figure/
