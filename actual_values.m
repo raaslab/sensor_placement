@@ -15,6 +15,5 @@ for g = 1 : size(input_data, 1)
 	end
 	temp = [temp; temp1];
 end
-
 end
 
