@@ -1,60 +1,62 @@
+close all;
 clc;
 clear all;
 
-l = 0.8;
-epsilon = 8.0;
-delta = 0.3;
-max_diff = 15;
-sensor_noise_std = 0.5;
+% l = 0.8;
+epsilon = 1.0;
+delta = 0.8;
+lipschitz_constant = 15;
+% max_diff = 15;
+sensor_noise_std = 0.3;
 % specified_number = 1000;
 resolution = 0.1;
-zeta = (2 *  epsilon^2 * sensor_noise_std^2) / (max_diff^2 * log(2/delta));
+% zeta = (2 *  epsilon^2 * sensor_noise_std^2) / (max_diff^2 * log(2/delta));
 
-lambda =  sqrt(-2 * l^2 * log(1 - zeta))
+
 length_e = 4; width_e = 4;
-epsilon_per = 15;
+% epsilon_per = 15;
 % robot speed in meters/minute
 % robot_speed = 1;
 % measure time in minutes
-measure_time = 10^-2;
-specified_budget = 2000;
-
-
-m_alpha = round( sensor_noise_std ^ 2 / ((1 - zeta) ^ -0.75 - 1));
-
+% measure_time = 10^-2;
+% specified_budget = 2000;
+c = 3;
+r_max = (epsilon + c*sensor_noise_std)/lipschitz_constant;
+% m_alpha = round( sensor_noise_std ^ 2 / ((1 - zeta) ^ -0.75 - 1));
 % subplot(2, 2, 1);
 % rectangle('Position',[0 0 length_e width_e]);
 % hold on;
 
-meanfunc = [];                    % empty: don't use a mean function
-covfunc = @covSEiso;              % Squared Exponental covariance function
-likfunc = @likGauss;              % Gaussian likelihood
-hyp = struct('mean', [], 'cov', [log(l) log(1)], 'lik', log(sensor_noise_std));
+% meanfunc = [];                    % empty: don't use a mean function
+% covfunc = @covSEiso;              % Squared Exponental covariance function
+% likfunc = @likGauss;              % Gaussian likelihood
+% hyp = struct('mean', [], 'cov', [log(l) log(1)], 'lik', log(sensor_noise_std));
 
 spaceX_store = [];
 spaceY_store = [];
 t = linspace(0, 2 * pi);
 
-for spaceX = sqrt(2) * lambda : 2 * lambda : length_e 
-	for spaceY = sqrt(2) * lambda : 2 * lambda : width_e
-		spaceX_store = [spaceX_store, spaceX];
-		spaceY_store = [spaceY_store, spaceY];
-		%plot(spaceX + 2 * lambda * cos(t), spaceY + 2 * lambda * sin(t));
-		%hold on;
-	end
-end
-% axis equal;
-% scatter(spaceX_store, spaceY_store, 'b');
 
-points = [spaceX_store; spaceY_store];
+% Plot disks of radii r_max
+[spaceXtmp, spaceYtmp] = meshgrid(r_max/sqrt(2):r_max:length_e, r_max/sqrt(2):r_max:width_e); 
+spaceY = spaceYtmp(:); spaceX = spaceXtmp(:);
+viscircles([spaceX, spaceY], r_max*ones(numel(spaceX), 1));
+axis equal;
+
+% figure();
+% scatter(spaceX, spaceY, 'b');
+
+points = [spaceX spaceY]';
 new = 9999;
 i = 1;
 
-% Calculate MIS and denote centre of MIS disks by 'points'
+% pause();
+
+% Calculate MIS and denote centers of MIS disks by 'points'
 while i < new
 	index_c = [];
 	for j = i + 1 : size(points, 2)
-		if (points(1, i) - points(1, j))^2 + (points(2, i) - points(2, j))^2 <= 16 * lambda^2
+		if (points(1, i) - points(1, j))^2 + (points(2, i) - points(2, j))^2 <= 4*r_max^2
 			index_c = [index_c; j];
 		end
 	end
@@ -65,47 +67,56 @@ while i < new
 	i = i + 1;
 end
 
+
+figure();
+scatter(points(1, :), points(2, :)); hold on;
+viscircles([points(1, :)', points(2, :)'], r_max*ones(numel(points)/2, 1));
+% pause();
+
+
+all_X = []; all_Y = [];
 % subplot(2, 2, 2);
-% for i  = 1 : size(points, 2)
-% 	plot(points(1, i) + 2 * lambda * cos(t), points(2, i) + 2 * lambda * sin(t));
-% 	%plot(points(1, i) + 6 * lambda * cos(t), points(2, i) + 6 * lambda * sin(t));
-% 	%rectangle('Position',[points(1, i)-6*lambda  points(2, i)-6*lambda 12*lambda 12*lambda]);
-% 	%[XX, YY] = meshgrid(points(1, i) - 5.5*lambda : lambda/sqrt(2) : points(1, i) + 5.5*lambda, points(2, i) - 5.5*lambda : lambda/sqrt(2) : points(2, i) + 5.5*lambda);
-% 	%all_X = [all_X ; XX(:)]; all_Y = [all_Y ; YY(:)];
-% 	hold on;
-% end
+figure();
+for i  = 1 : size(points, 2)
+	% plot(points(1, i) + 2 * lambda * cos(t), points(2, i) + 2 * lambda * sin(t));
+	plot(points(1, i) + 3*r_max*cos(t), points(2, i) + 3*r_max*sin(t));
+	% rectangle('Position',[points(1, i)-3*r_max  points(2, i)-3*r_max 6*r_max 6*r_max]);
+	% [XX, YY] = meshgrid(points(1, i) - 5.5*r_max : r_max/sqrt(2) : points(1, i) + 5.5*r_max, points(2, i) - 5.5*r_max : r_max/sqrt(2) : points(2, i) + 5.5*r_max);
+	% all_X = [all_X ; XX(:)]; all_Y = [all_Y ; YY(:)];
+	hold on;
+end
 
-
+pause();
 
 % subplot(2, 2, 3);
 % rectangle('Position',[0 0 length_e width_e]);
 % hold on;
-all_X = [] ; all_Y = [];
-for i  = 1 : size(points, 2)
-%	plot(points(1, i) + 2 * lambda * cos(t), points(2, i) + 2 * lambda * sin(t));
-	%plot(points(1, i) + 6 * lambda * cos(t), points(2, i) + 6 * lambda * sin(t));
-	%rectangle('Position',[points(1, i)-6*lambda  points(2, i)-6*lambda 12*lambda 12*lambda]);
-	[XX, YY] = meshgrid(points(1, i) - 5.5 * lambda : lambda/sqrt(2) : points(1, i) + 5.5 * lambda, points(2, i) - 5.5*lambda : lambda/sqrt(2) : points(2, i) + 5.5*lambda);
-	all_X = [all_X ; XX(:)]; all_Y = [all_Y ; YY(:)];
-	%hold on;
-end
+% all_X = [] ; all_Y = [];
+% for i  = 1 : size(points, 2)
+% %	plot(points(1, i) + 2 * lambda * cos(t), points(2, i) + 2 * lambda * sin(t));
+% 	%plot(points(1, i) + 6 * lambda * cos(t), points(2, i) + 6 * lambda * sin(t));
+% 	%rectangle('Position',[points(1, i)-6*lambda  points(2, i)-6*lambda 12*lambda 12*lambda]);
+% 	[XX, YY] = meshgrid(points(1, i) - 5.5 * lambda : lambda/sqrt(2) : points(1, i) + 5.5 * lambda, points(2, i) - 5.5*lambda : lambda/sqrt(2) : points(2, i) + 5.5*lambda);
+% 	all_X = [all_X ; XX(:)]; all_Y = [all_Y ; YY(:)];
+% 	%hold on;
+% end
 
 design_matrix = [];
 grnd_trth = [];
 
 
-for i = 1 : length(all_X)
-		if 0 < all_X(i) && all_X(i) < length_e && 0 < all_Y(i) && all_Y(i) < width_e
-			for j = 1 : m_alpha
-				collected_sample = normrnd(actual_values([all_X(i) all_Y(i)], length_e, width_e) , sensor_noise_std);
-				%grnd_trth = [grnd_trth; all_X(i) all_Y(i) (all_X(i)-2)^2 + (all_Y(i)-2)^2];
-				design_matrix = [design_matrix ; all_X(i) all_Y(i) collected_sample];
-			end
+% for i = 1 : length(all_X)
+% 		if 0 < all_X(i) && all_X(i) < length_e && 0 < all_Y(i) && all_Y(i) < width_e
+% 			for j = 1 : m_alpha
+% 				collected_sample = normrnd(actual_values([all_X(i) all_Y(i)], length_e, width_e) , sensor_noise_std);
+% 				%grnd_trth = [grnd_trth; all_X(i) all_Y(i) (all_X(i)-2)^2 + (all_Y(i)-2)^2];
+% 				design_matrix = [design_matrix ; all_X(i) all_Y(i) collected_sample];
+% 			end
 
-		end
-end
+% 		end
+% end
 
-%Ensure that specifies sensing locations don't go beyond total sensing locations
+%Ensure that specified sensing locations don't go beyond total sensing locations
 % if specified_number >= size(design_matrix, 1)
 % 	specified_number =  size(design_matrix, 1);
 % end
@@ -127,6 +138,7 @@ end
 
 surf(xx, yy, true_value);
 pause();
+
 robot_speeds = [1.0];
 initial_positions = round( size(design_matrix, 1) * [0.2 : 0.2 : 0.2]);
 for index_position = 1 : numel(initial_positions)
