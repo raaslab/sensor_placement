@@ -67,8 +67,16 @@ while i < new
 	i = i + 1;
 end
 
-% delete first two disks
+% delete first two disks from bar{X} (they lie completely out of the environment)
 points = points(3:end, :);
+measurement_locations = [];
+% Cover with r_max/2 radii disks
+for i = 1:size(points, 1)
+	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max/sqrt(2):points(i, 1)+3*r_max,...
+	 points(i, 2)-3*r_max:r_max/sqrt(2):points(i, 2)+3*r_max);
+	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
+end
+
 
 figure();
 h = surf(Xq, Yq, Zq);
@@ -76,4 +84,5 @@ hold on;
 % scatter(diskX(:), diskY(:));
 set(h,'LineStyle','none')
 axis equal; grid off;
-viscircles([points(:, 1), points(:, 2)], r_max*ones(size(points, 1), 1));
+viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
+% viscircles([tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)], 0.5*r_max*ones(numel(tmp_measurement_locationsX(:)), 1));

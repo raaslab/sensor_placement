@@ -1,4 +1,4 @@
-% x = linspace(-4, 4, 100)';               
+% x = linspace(-4, 4, 100)';
 % y = sin(3*x) + normrnd(x, 0.2);  
 clc;
 clear all;
