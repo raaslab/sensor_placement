@@ -4,13 +4,13 @@ clc;
 clear all;
 close all;
 epsilon = .075; delta = 0.9;
-r_max_var = 15:0.5:30;
+r_max_var = 1:.1:10;
 val = [];
 for r_max = r_max_var
 	val = [val, myfun(r_max)];
 end
 
-plot(r_max_var, val)
+plot(r_max_var, val, 'red')
 hold on;
 line([r_max_var(1), r_max_var(end)], [epsilon/(sqrt(2)*erfinv(delta)), epsilon/(sqrt(2)*erfinv(delta))]);
 
@@ -24,9 +24,9 @@ function expression = myfun(r_max)
 	%   y = sin(3*x) + 0.1*gpml_randn(0.9, 20, 1);  % 20 noisy training targets
 	%   xs = linspace(-3, 3, 61)';                  % 61 test inputs 	
 
-	length_scale = 10;
-	signal_std = 10;
-	noise_std = 0.2; 	
+	length_scale = exp(1.1341);
+	signal_std = exp(-1.3895);
+	noise_std = exp(-5.0313); 	
 
 	meanfunc = [];                    % empty: don't use a mean function
 	covfunc = @covSEiso;              % Squared Exponental covariance function
