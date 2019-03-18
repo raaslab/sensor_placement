@@ -3,20 +3,21 @@
 clc;
 clear all;
 close all;
-epsilon = .075; delta = 0.9;
+epsilon = .25; delta = 0.8;
+
 r_max_var = 1:.1:10;
 val = [];
 for r_max = r_max_var
 	val = [val, myfun(r_max)];
 end
 
-plot(r_max_var, val, 'red')
+plot(r_max_var, val, 'red');
 hold on;
-line([r_max_var(1), r_max_var(end)], [epsilon/(sqrt(2)*erfinv(delta)), epsilon/(sqrt(2)*erfinv(delta))]);
+line([r_max_var(1), r_max_var(end)], [epsilon^2/(2*erfinv(delta)^2), epsilon^2/(2*erfinv(delta)^2)]);
 
 function expression = myfun(r_max)
 	xs = [0, 0];
-	theta = linspace(-pi, pi/2, 500)';
+	theta = linspace(-pi, pi/2, 100)';
 	% theta = zeros(50, 1);
 	x = r_max*cos(theta); y = r_max*sin(theta); z = x.^2 + y.^2;	
 
@@ -37,7 +38,7 @@ function expression = myfun(r_max)
 
 	% hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, x, y);	
 
-	[mu s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, [x, y], z, xs);	
+	% [mu s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, [x, y], z, xs);	
 
 	expression = signal_std^2*(1-exp(-r_max^2/length_scale^2)*numel(theta)*signal_std^2/...
 		(signal_std^2+noise_std^2));	

@@ -14,6 +14,7 @@ likfunc = @likGauss;              % Gaussian likelihood
 
 hyp = struct('mean', [3.9066], 'cov', [1.1341 -1.3895], 'lik', -5.0313);
 
+% define the vertices of the farm
 environment = [135, 230, 230, 190, 190, 140, 80, 150; 20, 20, 60, 70, 115, 115, 50, 50];
 
 % figure();
@@ -36,19 +37,27 @@ inputDesign(any(isnan(inputDesign), 2), :) = [];
 % hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, inputDesign(1:10:end, 1:2), inputDesign(1:10:end, end));
 % define lipschitz constant (ppm/meter)
 lipschitz = 3;
-l = exp(1.1341); sigma_0 = exp(-1.3895); omega = exp(-5.0313);
-N = 100;
-epsilon = .05; delta = 0.5795;
-arg1 = (sigma_0^2+omega^2)/(N*sigma_0^2);
-arg2 = 1-epsilon/(sqrt(2)*sigma_0^2*erfinv(delta));
-% r_max = l*sqrt(-log(arg1*arg2));
-r_max = 20;
+
+% kernel hyperparameters are obtained by minimizing the negative marginal log likelihood of OM dataset
+length_scale = exp(1.1341);
+signal_std = exp(-1.3895);
+noise_std = exp(-5.0313);
+N = 10000; epsilon = .25; delta = 0.8;
+
+% r_max is obtained from lemma 1  
+r_max = length_scale*sqrt(-log((signal_std^2+noise_std^2)/(N*signal_std^2)*(1-epsilon^2/(2*signal_std^2*erfinv(delta)^2))));
+
+
+% these values are chosen by observing the sampled functions for given kernel hyperparameters
+a = 0.1; b = 0.1;
+lipschitz_1 = 0.1;
 
 
 % Covering disks
-[diskX, diskY] = meshgrid(min(environment(1, :)):r_max:max(environment(1, :)), min(environment(2, :)):r_max:max(environment(2, :)));
+% [diskX, diskY] = inputDesign(1:2, :)
+% meshgrid(min(environment(1, :)):r_max:max(environment(1, :)), min(environment(2, :)):r_max:max(environment(2, :)));
 
-points = [diskX(:), diskY(:)];
+points = inputDesign(:, 1:2);
 new = size(points, 1);
 i = 1;
 % pause();
@@ -60,29 +69,46 @@ while i < new
 			index_c = [index_c; j];
 		end
 	end
-	for len = size(index_c, 1) : -1 : 1
-		points(index_c(len, 1), :) = [];
-	end
+	points(index_c, :) = [];
 	new = size(points, 1);
 	i = i + 1;
 end
 
-% delete first two disks from bar{X} (they lie completely out of the environment)
-points = points(3:end, :);
-measurement_locations = [];
-% Cover with r_max/2 radii disks
-for i = 1:size(points, 1)
-	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max/sqrt(2):points(i, 1)+3*r_max,...
-	 points(i, 2)-3*r_max:r_max/sqrt(2):points(i, 2)+3*r_max);
-	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
-end
-
+% sufficiency condition implemented here and alpha is calculated
+min_alph = floor((lipschitz + sqrt(2)*lipschitz_1)/epsilon*r_max);
+alph = min_alph:5:2*min_alph;
+% denominatro in the expression for n_alpha
+deno = epsilon - (lipschitz+sqrt(2)*lipschitz_1)*r_max./alph;
+% final expression for n_alphaN
+n_alph = (sqrt(2)*noise_std*erfinv(delta/(1-a*exp(-lipschitz_1^2/b^2)))./deno).^2-(noise_std/signal_std)^2;
+first_occ_tmp = find(n_alph <= 1);
+alph = min_alph + 5*first_occ_tmp(1);
 
 figure();
 h = surf(Xq, Yq, Zq);
 hold on;
-% scatter(diskX(:), diskY(:));
 set(h,'LineStyle','none')
 axis equal; grid off;
-viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
-% viscircles([tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)], 0.5*r_max*ones(numel(tmp_measurement_locationsX(:)), 1));
+viscircles([points(:, 1), points(:, 2)], r_max*ones(size(points, 1), 1));
+view(2);
+title('MIS Disks inside the environment')
+
+
+% claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
+measurement_locations = []
+% Cover with r_max/alpha radii disks
+for i = 1:size(points, 1)
+	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
+	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
+	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
+end
+
+% figure();
+% h = surf(Xq, Yq, Zq);
+% hold on;
+% % scatter(diskX(:), diskY(:));
+% set(h,'LineStyle','none')
+% axis equal; grid off;
+% % viscircles([points(:, 1), points(:, 2)], r_max*ones(size(points, 1), 1));
+% viscircles(measurement_locations, r_max/alph*ones(size(measurement_locations, 1), 1));
+% view(2);
