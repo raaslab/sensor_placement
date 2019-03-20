@@ -94,6 +94,11 @@ view(2);
 title('MIS Disks inside the environment')
 
 
+% delete some 3r_max disks which do not affect the intersection
+
+
+
+
 % claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
 measurement_locations = []
 % Cover with r_max/alpha radii disks
