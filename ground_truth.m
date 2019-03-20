@@ -89,12 +89,12 @@ h = surf(Xq, Yq, Zq);
 hold on;
 set(h,'LineStyle','none')
 axis equal; grid off;
-viscircles([points(:, 1), points(:, 2)], r_max*ones(size(points, 1), 1));
-view(2);
 title('MIS Disks inside the environment')
 
-
-% delete some 3r_max disks which do not affect the intersection
+% do the preprocessing
+points = preprocessing(points, 3*r_max, environment);
+viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
+view(2);
 
 
 
@@ -102,11 +102,11 @@ title('MIS Disks inside the environment')
 % claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
 measurement_locations = []
 % Cover with r_max/alpha radii disks
-for i = 1:size(points, 1)
-	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
-	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
-	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
-end
+% for i = 1:size(points, 1)
+% 	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
+% 	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
+% 	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
+% end
 
 % figure();
 % h = surf(Xq, Yq, Zq);
