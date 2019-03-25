@@ -3,9 +3,9 @@
 clc;
 clear all;
 close all;
-epsilon = .25; delta = 0.8;
+epsilon = 2.5; delta = 0.8;
 
-r_max_var = 1:.1:10;
+r_max_var = .1:.1:15;
 val = [];
 for r_max = r_max_var
 	val = [val, myfun(r_max)];
@@ -17,7 +17,7 @@ line([r_max_var(1), r_max_var(end)], [epsilon^2/(2*erfinv(delta)^2), epsilon^2/(
 
 function expression = myfun(r_max)
 	xs = [0, 0];
-	theta = linspace(-pi, pi/2, 100)';
+	theta = linspace(-pi, pi/2, 10000)';
 	% theta = zeros(50, 1);
 	x = r_max*cos(theta); y = r_max*sin(theta); z = x.^2 + y.^2;	
 
@@ -25,8 +25,8 @@ function expression = myfun(r_max)
 	%   y = sin(3*x) + 0.1*gpml_randn(0.9, 20, 1);  % 20 noisy training targets
 	%   xs = linspace(-3, 3, 61)';                  % 61 test inputs 	
 
-	length_scale = exp(1.1341);
-	signal_std = exp(-1.3895);
+	length_scale = exp(-1.1341);
+	signal_std = exp(1.3895);
 	noise_std = exp(-5.0313); 	
 
 	meanfunc = [];                    % empty: don't use a mean function
@@ -34,7 +34,7 @@ function expression = myfun(r_max)
 	likfunc = @likGauss;              % Gaussian likelihood	
 	
 
-	hyp = struct('mean', [], 'cov', [log(length_scale) log(signal_std)], 'lik', log(noise_std));	
+	% hyp = struct('mean', [], 'cov', [log(length_scale) log(signal_std)], 'lik', log(noise_std));	
 
 	% hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, x, y);	
 

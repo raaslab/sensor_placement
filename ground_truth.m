@@ -5,14 +5,15 @@ close all;
 load('OM_dataset.mat');
 Xq = flipud(Xq);
 Yq = flipud(Yq);
-Zq = flipud(Zq)-10;
+scale_factor = 10;
+Zq = scale_factor*flipud(Zq)-300;
 
 
-meanfunc = @meanConst;                    % empty: don't use a mean function
+meanfunc = @meanConst;            % empty: don't use a mean function
 covfunc = @covSEiso;              % Squared Exponental covariance function
 likfunc = @likGauss;              % Gaussian likelihood
 
-hyp = struct('mean', [3.9066], 'cov', [1.1341 -1.3895], 'lik', -5.0313);
+hyp = struct('mean', [.1153], 'cov', [-1.1341 1.3895], 'lik', -5.0313);
 
 % define the vertices of the farm
 environment = [135, 230, 230, 190, 190, 140, 80, 150; 20, 20, 60, 70, 115, 115, 50, 50];
@@ -23,8 +24,7 @@ environment = [135, 230, 230, 190, 190, 140, 80, 150; 20, 20, 60, 70, 115, 115, 
 % axis equal;
 
 %% define the farm boundary
-in = double(inpolygon(Xq, Yq, environment(1, :), environment(2, :)));
-ex_polygon = in == 0;
+ex_polygon = double(inpolygon(Xq, Yq, environment(1, :), environment(2, :))) == 0;
 Xq(ex_polygon) = nan; Yq(ex_polygon) = nan; Zq(ex_polygon) = nan;
 
 inputDesign = [Xq(:), Yq(:), Zq(:)];
@@ -34,15 +34,17 @@ inputDesign(any(isnan(inputDesign), 2), :) = [];
 % Yq = Yq(min(environment(1, :)):max(environment(1, :)), min(environment(2, :)):max(environment(2, :)));
 % Zq = Zq(min(environment(1, :)):max(environment(1, :)), min(environment(2, :)):max(environment(2, :)));
 
-% hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, inputDesign(1:10:end, 1:2), inputDesign(1:10:end, end));
+% hyp2 = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, inputDesign(1:50:end, 1:2), inputDesign(1:50:end, end))
+% pause();
+
 % define lipschitz constant (ppm/meter)
-lipschitz = 3;
+lipschitz = 30;
 
 % kernel hyperparameters are obtained by minimizing the negative marginal log likelihood of OM dataset
-length_scale = exp(1.1341);
-signal_std = exp(-1.3895);
+length_scale = exp(-.1341);
+signal_std = exp(1.3895);
 noise_std = exp(-5.0313);
-N = 10000; epsilon = .25; delta = 0.8;
+N = 10000; epsilon = 5; delta = 0.8;
 
 % r_max is obtained from lemma 1  
 r_max = length_scale*sqrt(-log((signal_std^2+noise_std^2)/(N*signal_std^2)*(1-epsilon^2/(2*signal_std^2*erfinv(delta)^2))));
@@ -50,7 +52,7 @@ r_max = length_scale*sqrt(-log((signal_std^2+noise_std^2)/(N*signal_std^2)*(1-ep
 
 % these values are chosen by observing the sampled functions for given kernel hyperparameters
 a = 0.1; b = 0.1;
-lipschitz_1 = 0.1;
+lipschitz_1 = 1;
 
 
 % Covering disks
@@ -89,24 +91,35 @@ h = surf(Xq, Yq, Zq);
 hold on;
 set(h,'LineStyle','none')
 axis equal; grid off;
-title('MIS Disks inside the environment')
+% title('Covering the farm with 3r_{max} disks with preprocessing')
 
 % do the preprocessing
 points = preprocessing(points, 3*r_max, environment);
-viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
+
+% viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
 view(2);
-
-
 
 
 % claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
 measurement_locations = []
 % Cover with r_max/alpha radii disks
-% for i = 1:size(points, 1)
-% 	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
-% 	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
-% 	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(:), tmp_measurement_locationsY(:)]];
-% end
+for i = 1:size(points, 1)
+	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
+	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
+	
+	lie_inside = inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, environment(1, :), environment(2, :));
+	% inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3/sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
+	%  [points(j, 2) + 3/sqrt(2)*r_max*sin(pi/4*(1:2:7))]); 
+	already = zeros(size(tmp_measurement_locationsX), 'logical');
+	for j = 1:i-1
+		% already = already|(tmp_measurement_locationsX - points(j, 1)).^2 + (tmp_measurement_locationsY - points(j, 2)).^2 <= 9*r_max^2;
+		already = already|inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3*sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
+		 [points(j, 2) + 3*sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
+	end
+measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
+% scatter(measurement_locations(:, 1), measurement_locations(:, 2));
+% pause();
+end
 
 % figure();
 % h = surf(Xq, Yq, Zq);
@@ -116,4 +129,5 @@ measurement_locations = []
 % axis equal; grid off;
 % % viscircles([points(:, 1), points(:, 2)], r_max*ones(size(points, 1), 1));
 % viscircles(measurement_locations, r_max/alph*ones(size(measurement_locations, 1), 1));
+% scatter(measurement_locations());
 % view(2);
