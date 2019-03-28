@@ -6,14 +6,14 @@ load('OM_dataset.mat');
 Xq = flipud(Xq);
 Yq = flipud(Yq);
 scale_factor = 10;
-Zq = scale_factor*flipud(Zq)-300;
+Zq = scale_factor*flipud(Zq);
 
 
-meanfunc = @meanConst;            % empty: don't use a mean function
+meanfunc = [];            % empty: don't use a mean function
 covfunc = @covSEiso;              % Squared Exponental covariance function
 likfunc = @likGauss;              % Gaussian likelihood
 
-hyp = struct('mean', [.1153], 'cov', [-1.1341 1.3895], 'lik', -5.0313);
+hyp = struct('mean', [], 'cov', [-1.1341 1.3895], 'lik', -5.0313);
 
 % define the vertices of the farm
 environment = [135, 230, 230, 190, 190, 140, 80, 150; 20, 20, 60, 70, 115, 115, 50, 50];
@@ -88,25 +88,37 @@ alph = min_alph + 5*first_occ_tmp(1);
 
 figure();
 h = surf(Xq, Yq, Zq);
-hold on;
-set(h,'LineStyle','none')
-axis equal; grid off;
-% title('Covering the farm with 3r_{max} disks with preprocessing')
+set(h,'LineStyle','none');
+% hold on;
+axis equal; 
+grid off;
+% title('Covering the farm with 3r_{max} disks')
 
 % do the preprocessing
 points = preprocessing(points, 3*r_max, environment);
 
-% viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1));
+viscircles([points(:, 1), points(:, 2)], 3*r_max*ones(size(points, 1), 1), 'LineWidth', 1);
 view(2);
 
 
 % claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
 measurement_locations = []
+x_test = 80 + 150*rand(5000, 1);
+y_test = 20 + 95*rand(5000, 1);
+index = inpolygon(x_test, y_test, [135, 230, 230, 190, 190, 140, 80, 150], ...
+	 [20, 20, 60, 70, 115, 115, 50, 50]);
+test_points = [x_test(index), y_test(index)];
+real_test_values = griddata(inputDesign(:, 1), ...
+ 		inputDesign(:, 2), inputDesign(:, 3), test_points(:, 1), test_points(:, 2), ...
+ 		'cubic');
+fileID = fopen('time_total.txt', 'w');
+fileID1 = fopen('measurement_locations.txt', 'w');
 % Cover with r_max/alpha radii disks
+freq = 50;
 for i = 1:size(points, 1)
+	i
 	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
 	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
-	
 	lie_inside = inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, environment(1, :), environment(2, :));
 	% inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3/sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
 	%  [points(j, 2) + 3/sqrt(2)*r_max*sin(pi/4*(1:2:7))]); 
@@ -116,10 +128,34 @@ for i = 1:size(points, 1)
 		already = already|inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3*sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
 		 [points(j, 2) + 3*sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
 	end
-measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
-% scatter(measurement_locations(:, 1), measurement_locations(:, 2));
+	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
 % pause();
+	real_train_values = griddata(inputDesign(:, 1), ...
+	 		inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), ...
+	 		'cubic');
+
+	[ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
+	 		measurement_locations(1:freq:end, :), real_train_values, ...
+	 		 test_points);	
+	
+	fprintf(fileID1,'%d\n', [numel(measurement_locations)/2]);
+	if i == 1
+		fprintf(fileID,'%d \t %d\n', [i*r_max*82+...
+ 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
+	end
+
+	if i == 2
+		fprintf(fileID,'%d \t %d\n', [sum(sum(dist(points(1:i, :))))/2 + i*r_max*82+...
+ 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
+	end
+
+
+	if i > 2
+		fprintf(fileID,'%d \t %d\n', [tsp_solver(points(1:i, 1), points(1:i, 2))+i*r_max*82+...
+ 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
+	end
 end
+
 
 % figure();
 % h = surf(Xq, Yq, Zq);

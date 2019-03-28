@@ -52,7 +52,7 @@ opts = optimoptions('intlinprog','Display','off','Heuristics','advanced');
 
 segments = find(x_tsp); % Get indices of lines on optimal path
 lh = zeros(nStops,1); % Use to store handles to lines on plot
-lh = updateSalesmanPlot(lh,x_tsp,idxs,stopsLon,stopsLat);
+% lh = updateSalesmanPlot(lh,x_tsp,idxs,stopsLon,stopsLat);
 %title('Solution with Subtours');
 
 tours = detectSubtours(x_tsp,idxs);

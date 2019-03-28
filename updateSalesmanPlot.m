@@ -23,8 +23,8 @@ end
 
 % lh = 
 
-plot(Lat,Lon,'-o','LineWidth',2 );
-axis([0 4 0 4]);
+plot(Lat,Lon,'-o','LineWidth',2, 'Color', 'b' );
+% axis([0 4 0 4]);
 % scatter(stopsLon, stopsLat);
 
 %set(lh,'Visible','on'); drawnow; % Add new lines to plot
