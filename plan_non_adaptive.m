@@ -155,7 +155,7 @@ maximum_budget = [1 : size(design_matrix, 1)]' * measure_time + cumsum( [0; sqrt
 if specified_budget >= maximum_budget(end, end)
 	specified_budget = maximum_budget(end, end);
 end
-
+	
 num_of_mispredict = [];
 entropy_post = [];
 number_of_sensing_spots = 1;
@@ -181,7 +181,7 @@ while budget <= specified_budget
 		entropy_post = [entropy_post; sum(sum(0.5 * log(2 * pi * exp(1) * ysd)))];
 	end
 
-	% Calculate the total time spent till now	
+	% Calculate the total time spent till now
 	total_measure_time = [1 : number_of_sensing_spots ]' * measure_time;
 	total_travel_time = cumsum( [0 ; sqrt( sum (diff ([design_matrix(1 : number_of_sensing_spots, 1) design_matrix(1:number_of_sensing_spots ,2)]).^2, 2))])/ robot_speed;
  	budget = total_travel_time(end, end) + total_measure_time(end, end);

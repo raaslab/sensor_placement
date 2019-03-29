@@ -2,12 +2,14 @@ clear all;
 clc;
 close all;
 
-load('OM_dataset.mat');
-Xq = flipud(Xq);
-Yq = flipud(Yq);
-scale_factor = 10;
-Zq = scale_factor*flipud(Zq);
+% load('OM_dataset.mat');
+% Xq = flipud(Xq);
+% Yq = flipud(Yq);
+% scale_factor = 10;
+% Zq = scale_factor*flipud(Zq);
 
+[Xq, Yq] = meshgrid(70:240, 10:120);
+Zq = exp(-((Xq-155).^2+(Yq-65).^2)/10^3);
 
 meanfunc = [];            % empty: don't use a mean function
 covfunc = @covSEiso;              % Squared Exponental covariance function
@@ -44,7 +46,7 @@ lipschitz = 30;
 length_scale = exp(-.1341);
 signal_std = exp(1.3895);
 noise_std = exp(-5.0313);
-N = 10000; epsilon = 5; delta = 0.8;
+N = 10000; epsilon = .5; delta = 0.8;
 
 % r_max is obtained from lemma 1  
 r_max = length_scale*sqrt(-log((signal_std^2+noise_std^2)/(N*signal_std^2)*(1-epsilon^2/(2*signal_std^2*erfinv(delta)^2))));
@@ -85,6 +87,7 @@ deno = epsilon - (lipschitz+sqrt(2)*lipschitz_1)*r_max./alph;
 n_alph = (sqrt(2)*noise_std*erfinv(delta/(1-a*exp(-lipschitz_1^2/b^2)))./deno).^2-(noise_std/signal_std)^2;
 first_occ_tmp = find(n_alph <= 1);
 alph = min_alph + 5*first_occ_tmp(1);
+alph = 3;
 
 figure();
 h = surf(Xq, Yq, Zq);
@@ -92,6 +95,7 @@ set(h,'LineStyle','none');
 % hold on;
 axis equal; 
 grid off;
+% pause();
 % title('Covering the farm with 3r_{max} disks')
 
 % do the preprocessing
@@ -103,18 +107,20 @@ view(2);
 
 % claculat measurement locations by covering 3r_max disk with r_max/alpha disks 
 measurement_locations = []
-x_test = 80 + 150*rand(5000, 1);
-y_test = 20 + 95*rand(5000, 1);
+x_test = 80 + 150*rand(1000, 1);
+y_test = 20 + 95*rand(1000, 1);
 index = inpolygon(x_test, y_test, [135, 230, 230, 190, 190, 140, 80, 150], ...
 	 [20, 20, 60, 70, 115, 115, 50, 50]);
 test_points = [x_test(index), y_test(index)];
-real_test_values = griddata(inputDesign(:, 1), ...
- 		inputDesign(:, 2), inputDesign(:, 3), test_points(:, 1), test_points(:, 2), ...
- 		'cubic');
+% real_test_values = griddata(inputDesign(:, 1), ...
+%  		inputDesign(:, 2), inputDesign(:, 3), test_points(:, 1), test_points(:, 2), ...
+%  		'cubic');
+real_test_values = exp(-((test_points(:, 1)-155).^2+(test_points(:, 2)-65).^2)/10^3);
+
 fileID = fopen('time_total.txt', 'w');
 fileID1 = fopen('measurement_locations.txt', 'w');
 % Cover with r_max/alpha radii disks
-freq = 50;
+freq = 1;
 for i = 1:size(points, 1)
 	i
 	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
@@ -123,22 +129,27 @@ for i = 1:size(points, 1)
 	% inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3/sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
 	%  [points(j, 2) + 3/sqrt(2)*r_max*sin(pi/4*(1:2:7))]); 
 	already = zeros(size(tmp_measurement_locationsX), 'logical');
+	
 	for j = 1:i-1
 		% already = already|(tmp_measurement_locationsX - points(j, 1)).^2 + (tmp_measurement_locationsY - points(j, 2)).^2 <= 9*r_max^2;
 		already = already|inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3*sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
 		 [points(j, 2) + 3*sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
 	end
+
 	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
 % pause();
-	real_train_values = griddata(inputDesign(:, 1), ...
-	 		inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), ...
-	 		'cubic');
-
+	% real_train_values = griddata(inputDesign(:, 1), ...
+	%  		inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), ...
+	%  		'cubic');
+	real_train_values = exp(-((measurement_locations(1:freq:end, 1)-155).^2+(measurement_locations(1:freq:end, 2)-65).^2)/10^3);
 	[ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
 	 		measurement_locations(1:freq:end, :), real_train_values, ...
 	 		 test_points);	
+	% scatter(measurement_locations(:, 1), measurement_locations(:, 2));
+	% pause();
 	
 	fprintf(fileID1,'%d\n', [numel(measurement_locations)/2]);
+	
 	if i == 1
 		fprintf(fileID,'%d \t %d\n', [i*r_max*82+...
  			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
@@ -154,6 +165,7 @@ for i = 1:size(points, 1)
 		fprintf(fileID,'%d \t %d\n', [tsp_solver(points(1:i, 1), points(1:i, 2))+i*r_max*82+...
  			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
 	end
+	numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)
 end
 
 
