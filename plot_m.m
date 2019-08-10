@@ -1,24 +1,17 @@
 clear all;
 clc;
+close all;
 
 
-epsilon = 0.2;
-delta = 0.8;
+prior_variance = 10;
+omega = 1;
+MSE = 1;
 
-omega = 2.0 : 0.05 : 3;
+alpha_ = 1.1:0.05:2;
 
+den = (1-MSE/prior_variance^2).^(1./alpha_.^2-1)-1;
+expression = alpha_.^2*(omega/prior_variance)^2./den;
 
-for index_omega = 1 : numel(omega)
-	zeta = (2 *  epsilon^2 * omega(index_omega)^2) / log(2/delta);
-	num_m = (zeta - 1) * omega (index_omega)^ 2;
-	rho = sqrt(1  - 0.95 * zeta) : 0.05 * zeta : 1; 
-	for index_rho = 1 : numel(rho)
-		den_m = 1 - rho(index_rho) ^ 2 - zeta;		
-		plot3(omega(index_omega), rho(index_rho), num_m/den_m);
-		hold on;
-	end
-end
-
-
-xlabel('omega');
-ylabel('rho');
+plot(alpha_, expression);
+xlabel('\alpha')
+% ylabel('Total measurements required to cover the bigger disk')
