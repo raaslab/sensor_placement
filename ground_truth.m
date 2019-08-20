@@ -113,7 +113,7 @@ points = preprocessing(points, 3*r_max, environment);
 % fileID = fopen('test_points.txt', 'w');
 
 % calculate measurement locations by covering 3r_max disk with r_max/alpha disks 
-measurement_locations = []
+measurement_locations = [];
 % x_test = 80 + 150*rand(1000, 1);
 % y_test = 20 + 95*rand(1000, 1);
 % index = inpolygon(x_test, y_test, [135, 230, 230, 190, 190, 140, 80, 150], ...
@@ -123,120 +123,132 @@ measurement_locations = []
 
 measurement_locations = load('measurement_locations.txt');
 test_points = load('test_points.txt');
-% real_test_values = griddata(inputDesign(:, 1), ...
-%  		inputDesign(:, 2), inputDesign(:, 3), test_points(:, 1), test_points(:, 2), ...
-%  		'cubic');
+real_test_values = griddata(inputDesign(:, 1),inputDesign(:, 2), inputDesign(:, 3), test_points(:, 1), test_points(:, 2));
+
+% test_points(isnan(real_test_values), :) = [];
+% real_test_values(isnan(real_test_values)) = [];
+
 % real_test_values = exp(-((test_points(:, 1)-155).^2+(test_points(:, 2)-65).^2)/10^3);
 freq = 1;
-% fileID = fopen('time_total.txt', 'w');
+% fileID = fopen('time_total5.txt', 'w');
 % fileID1 = fopen('measurement_locations.txt', 'w');
 % Cover with r_max/alpha radii disks
 % store = [sum((real_test_values - 0).^2)/numel(real_test_values)];
-
-% for i = 1:size(points, 1)
-% 	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
-% 	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
-% 	lie_inside = inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, environment(1, :), environment(2, :));
-% 	% inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3/sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
-% 	%  [points(j, 2) + 3/sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
-% 	already = zeros(size(tmp_measurement_locationsX), 'logical');
+% store_error =[];
+% store_ysd = [];
+% points = points(randperm(size(points, 1)), :);
+for i = 1:size(points, 1)
+	i
+	[tmp_measurement_locationsX, tmp_measurement_locationsY] = meshgrid(points(i, 1)-3*r_max:r_max*sqrt(2)/alph:points(i, 1)+3*r_max,...
+	 points(i, 2)-3*r_max:r_max*sqrt(2)/alph:points(i, 2)+3*r_max);
+	lie_inside = inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, environment(1, :), environment(2, :));
+	% inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3/sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
+	%  [points(j, 2) + 3/sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
+	already = zeros(size(tmp_measurement_locationsX), 'logical');
 	
-% 	for j = 1:i-1
-% 		% already = already|(tmp_measurement_locationsX - points(j, 1)).^2 + (tmp_measurement_locationsY - points(j, 2)).^2 <= 9*r_max^2;
-% 		already = already|inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3*sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
-% 		 [points(j, 2) + 3*sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
-% 	end
+	for j = 1:i-1
+		% already = already|(tmp_measurement_locationsX - points(j, 1)).^2 + (tmp_measurement_locationsY - points(j, 2)).^2 <= 9*r_max^2;
+		already = already|inpolygon(tmp_measurement_locationsX, tmp_measurement_locationsY, [points(j, 1) + 3*sqrt(2)*r_max*cos(pi/4*(1:2:7))],...
+		 [points(j, 2) + 3*sqrt(2)*r_max*sin(pi/4*(1:2:7))]);
+	end
 
-% 	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
-% % pause();
-% 	% real_train_values = griddata(inputDesign(:, 1), ...
-% 	%  		inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), ...
-% 	%  		'cubic');
-% 	real_train_values = exp(-((measurement_locations(:, 1)-155).^2+(measurement_locations(:, 2)-65).^2)/10^3);
+	measurement_locations = [measurement_locations; [tmp_measurement_locationsX(lie_inside&~already), tmp_measurement_locationsY(lie_inside&~already)]];
+% pause();
+	% cum_measurement_locations = measurement_locations(1:i, :);
+	real_train_values = griddata(inputDesign(:, 1), ...
+	 		inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2));
+	% real_train_values = exp(-((measurement_locations(:, 1)-155).^2+(measurement_locations(:, 2)-65).^2)/10^3);
 	
-% 	[ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
-% 	 		measurement_locations(1:freq:end, :), real_train_values, ...
-% 	 		 test_points);
-% 	store = [store, sum((real_test_values - ypred).^2)/numel(ysd)];
-% % emp_error = ((real_test_values - ypred).^2 > ysd);
-% 	% scatter(measurement_locations(:, 1), measurement_locations(:, 2));
-% 	% pause();
+	[ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
+	 		measurement_locations(1:freq:end, :), real_train_values, ...
+	 		 test_points);
+	% store_error = [store_error, mean((real_test_values - ypred).^2)];
+	% store_ysd = [store_ysd, mean(ysd)];
+% emp_error = ((real_test_values - ypred).^2 > ysd);
+	% scatter(measurement_locations(:, 1), measurement_locations(:, 2));
+	% pause();
 	
-% 	% fprintf(fileID1,'%d\n', [numel(measurement_locations)]);
+	% fprintf(fileID1,'%d\n', [numel(measurement_locations)]);
 	
-% 	% if i == 1
-% 	% 	fprintf(fileID,'%d \t %d\n', [i*r_max*82+...
-%  % 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
-% 	% end
+	% if i == 1
+	% 	fprintf(fileID,'%d \t %d \t %d \n', [i*r_max*82+numel(real_train_values)/100 mean(ysd) mean((real_test_values - ypred).^2)]);
+	% end
 
-% 	% if i == 2
-% 	% 	fprintf(fileID,'%d \t %d\n', [sum(sum(dist(points(1:i, :))))/2 + i*r_max*82+...
-%  % 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
-% 	% end
+	% if i == 2
+	% 	fprintf(fileID,'%d \t %d \t %d \n', [sum(sum(dist(points(1:i, :))))/2 + i*r_max*82+numel(real_train_values)/100 mean(ysd) mean((real_test_values - ypred).^2)]);
+	% end
 
+	if i > 2
+		tsp_solver(points(1:i, 1), points(1:i, 2))
+		% fprintf(fileID,'%d \t %d\n', [tsp_solver(points(1:i, 1), points(1:i, 2)) + i*r_max*82+numel(real_train_values)/100 mean(ysd)]);
+		% fprintf(fileID,'%d \t %d \t %d\n', [tsp_solver(points(1:i, 1), points(1:i, 2)) + i*r_max*82+numel(real_train_values)/100 mean(ysd) mean((real_test_values - ypred).^2)]);
+	end
+	% numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1);
+end
 
-% 	% if i > 2
-% 	% 	fprintf(fileID,'%d \t %d\n', [tsp_solver(points(1:i, 1), points(1:i, 2))+i*r_max*82+...
-%  % 			numel(real_train_values)/100 numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1)]);
-% 	% end
-% 	% numel(find(abs(ypred - real_test_values) > epsilon))/size(test_points, 1);
-% end
+% pause();
 
 % fprintf(fileID1, '%d\t%d\n', measurement_locations');
 
-K = feval(covfunc, hyp.cov, [measurement_locations; test_points]);
-K = K + noise_std^2*eye(size(K));
-mu = feval(meanfunc, hyp.mean, [measurement_locations; test_points]);
-num_measure_loc = size(measurement_locations, 1);
-
-seed = 50;
-
-real_train_values = griddata(inputDesign(:, 1), ...
-  	inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2));
+% for seed = 1:1000
+% seed
+% K = feval(covfunc, hyp.cov, [measurement_locations; test_points]);
+% K = K + noise_std^2*eye(size(K));
+% mu = feval(meanfunc, hyp.mean, [measurement_locations; test_points]);
+% num_measure_loc = size(measurement_locations, 1);
 
 
-% scatter3(measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), real_train_values);
-% pause();
+
+% % real_train_values = griddata(inputDesign(:, 1), ...
+% %   	inputDesign(:, 2), inputDesign(:, 3), measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2));
+
+
+% % % scatter3(measurement_locations(1:freq:end, 1), measurement_locations(1:freq:end, 2), real_train_values);
+% % % pause();
 % real_values = chol(K)'*gpml_randn(seed, size([measurement_locations; test_points], 1), 1) + mu;
-% real_test_values = chol(K)'*gpml_randn(0.15, size(test_points, 1), 1) + mu + noise_std*gpml_randn(0.2, size(test_points, 1), 1);
+% % real_test_values = chol(K)'*gpml_randn(seed, size(test_points, 1), 1) + mu + noise_std*gpml_randn(seed, size(test_points, 1), 1);
 
-[ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
-	 		measurement_locations(1:freq:end, :), real_train_values(1:num_measure_loc, :), ...
-	 		 [inputDesign(:, 1), inputDesign(:, 2)]);
+% % [ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
+% % 	 		measurement_locations(1:freq:end, :), real_train_values(1:num_measure_loc, :), ...
+% % 	 		 [inputDesign(:, 1), inputDesign(:, 2)]);
 
 
-pilot = [Zq(:)];
-pilot(array_of_nans) = nan;
-pilot(~array_of_nans) = ypred;
-% scatter3(inputDesign(1:freq:end, 1), inputDesign(1:freq:end, 2), ypred);
-% pause();
-% emp_error = ((real_values(num_measure_loc:end, num_measure_loc+1:end) - ypred).^2 > ysd);
+% [ypred, ysd] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, ...
+% 	 		measurement_locations(1:freq:end, :), real_values(1:num_measure_loc), ...
+% 	 		 test_points);
+
+% % pilot = [Zq(:)];
+% % pilot(array_of_nans) = nan;
+% % pilot(~array_of_nans) = ypred;
+% % % scatter3(inputDesign(1:freq:end, 1), inputDesign(1:freq:end, 2), ypred);
+% % % pause();
+% % emp_error = ((real_values(num_measure_loc:end, num_measure_loc+1:end) - ypred).^2 > ysd);
 
 % fileID1 = fopen(['emp_error_' num2str(seed) '.txt'], 'w');
 % fileID2 = fopen(['ysd_' num2str(seed) '.txt'], 'w');
 
 % fprintf(fileID1,'%d\n', (real_values(num_measure_loc+1:end, :) - ypred).^2);
 % fprintf(fileID2,'%d\n', ysd);
-
-figure();
-h = surf(Xq, Yq, reshape(pilot, size(Xq)));
-set(h,'LineStyle','none');
-colormap('jet');
-axis equal; 
-grid off;
-view(2);
+% end
+% figure();
+% h = surf(Xq, Yq, reshape(pilot, size(Xq)));
+% set(h,'LineStyle','none');
+% colormap('jet');
+% axis equal; 
+% grid off;
+% view(2);
 % figure();
 % plot(store);
 % hold on;
 % plot([1, 5], [MSE, MSE],'r');
 
-figure();
-h = surf(Xq, Yq, abs(Zq - reshape(pilot, size(Xq))));
-set(h,'LineStyle','none');
-colormap('jet');
-axis equal; 
-grid off;
-view(2);
+% figure();
+% h = surf(Xq, Yq, abs(Zq - reshape(pilot, size(Xq))));
+% set(h,'LineStyle','none');
+% colormap('jet');
+% axis equal; 
+% grid off;
+% view(2);
 
 
 % figure();

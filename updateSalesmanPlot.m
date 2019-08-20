@@ -21,9 +21,10 @@ for ii = 1:length(segments)
     Lon(3*ii-2:3*ii) = [stopsLon(start); stopsLon(stop); NaN];  
 end
 
+[Lat, Lon]
 % lh = 
 
-plot(Lat,Lon,'-o','LineWidth',2, 'Color', 'b' );
+% plot(Lat,Lon,'-o','LineWidth',2, 'Color', 'b' );
 % axis([0 4 0 4]);
 % scatter(stopsLon, stopsLat);
 
